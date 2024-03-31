@@ -12,11 +12,17 @@ namespace Dvsn\DemoshopFoundation\Setup;
 
 use Exception;
 use Doctrine\DBAL\Connection;
+use Shopware\Core\Content\Category\CategoryEntity;
 use Shopware\Core\Defaults;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
+use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
+use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
+use Shopware\Core\Framework\DataAbstractionLayer\Search\Sorting\FieldSorting;
 use Shopware\Core\Framework\Plugin\Context\InstallContext;
 use Shopware\Core\Framework\Uuid\Uuid;
+use Shopware\Core\System\Language\LanguageEntity;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class Install
 {
@@ -26,119 +32,106 @@ class Install
     public function __construct(
         protected readonly InstallContext $context,
         protected readonly Connection $connection,
-        protected readonly EntityRepository $customFieldSetRepository,
-        protected readonly EntityRepository $numberRangeRepository,
-        protected readonly EntityRepository $mailTemplateRepository,
-        protected readonly EntityRepository $documentTypeRepository,
-        protected readonly EntityRepository $documentBaseConfigRepository,
-        protected readonly EntityRepository $promitionRepository
+        protected readonly ContainerInterface $container
     ) {
     }
 
     public function install(): void
     {
-        $this->installCustomFields();
-        $this->installNumberRanges();
-        $this->installEmailTemplates();
-        $this->installDocuments();
-        $this->installPromotions();
+
+
     }
 
-    private function installCustomFields(): void
+    private function installCategories()
     {
-        foreach (DataHolder\CustomFields::$customFields as $customField) {
-            try {
-                $this->customFieldSetRepository->upsert(
-                    [$customField],
-                    $this->context->getContext()
-                );
-            }
-            catch (Exception $exception) {}
-        }
-    }
+        $enLanguageId = Defaults::LANGUAGE_SYSTEM;
+        $deLanguageId = null;
 
-    private function installEmailTemplates(): void
-    {
-        foreach (DataHolder\MailTemplates::$mailTemplates as $mailTemplate) {
-            $mailTemplate = $this->parseTranslations($mailTemplate);
-            $mailTemplate['mailTemplateType'] = $this->parseTranslations($mailTemplate['mailTemplateType']);
+        /** @var EntityRepository $languageRepository */
+        $languageRepository = $this->container->get('language.repository');
 
-            $this->mailTemplateRepository->upsert(
-                [$mailTemplate],
-                Context::createDefaultContext()
-            );
-        }
-    }
+        /** @var LanguageEntity $deLanguage */
+        $deLanguage = $languageRepository->search(
+            (new Criteria())->addAssociations(['locale'])->addFilter(new EqualsFilter('locale.code', 'de-DE')),
+            $this->context->getContext()
+        )->first();
 
-    private function installNumberRanges(): void
-    {
-        foreach (DataHolder\NumberRanges::$numberRanges as $numberRange) {
-            $numberRange = $this->parseTranslations($numberRange);
-            $numberRange['type'] = $this->parseTranslations($numberRange['type']);
+        $deLanguageId = $deLanguage->getId();
 
-            $this->numberRangeRepository->upsert(
-                [$numberRange],
-                Context::createDefaultContext()
-            );
-        }
-    }
 
-    private function installDocuments(): void
-    {
-        foreach (DataHolder\Documents::$documentTypes as $documentType) {
-            $documentType = $this->parseTranslations($documentType);
 
-            $this->documentTypeRepository->upsert(
-                [$documentType],
-                Context::createDefaultContext()
-            );
-        }
+        /** @var EntityRepository $categoryRepository */
+        $categoryRepository = $this->container->get('category.repository');
 
-        foreach (DataHolder\Documents::$documentBaseConfigs as $documentBaseConfig) {
-            $this->documentBaseConfigRepository->upsert(
-                [$documentBaseConfig],
-                Context::createDefaultContext()
-            );
-        }
+        /** @var CategoryEntity $root */
+        $root = $categoryRepository->search(
+            (new Criteria())->addSorting(new FieldSorting('autoIncrement', FieldSorting::ASCENDING))->setLimit(1),
+            $this->context->getContext()
+        )->first();
 
-        foreach (DataHolder\Documents::$documentBaseConfigSalesChannels as $documentbaseConfigSalesChannel) {
-            try {
-                $this->connection->insert(
-                    'document_base_config_sales_channel',
-                    [
-                        'id' => Uuid::fromHexToBytes($documentbaseConfigSalesChannel['id']),
-                        'document_base_config_id' => Uuid::fromHexToBytes($documentbaseConfigSalesChannel['documentBaseConfigId']),
-                        'document_type_id' => Uuid::fromHexToBytes($documentbaseConfigSalesChannel['documentTypeId']),
-                        'created_at' => (new \DateTime())->format(Defaults::STORAGE_DATE_TIME_FORMAT)
-                    ]
-                );
-            } catch (Exception $exception) {}
-        }
-    }
+        $catalogCategory = [
+            'id' => Uuid::randomHex(),
+            'afterCategoryId' => $root->getId(),
+            'active' => true,
+            'visible' => true,
+            'type' => 'page',
+            'translations' => [
+                [
+                    'languageId' => $enLanguageId,
+                    'name' => 'Catalogue #2'
+                ],
+                [
+                    'languageId' => $deLanguageId,
+                    'name' => 'Katalog #2'
+                ]
+            ]
+        ];
 
-    private function installPromotions(): void
-    {
-        $salesChannels = $this->getSalesChannels();
+        $categoryRepository->upsert([$catalogCategory], $this->context->getContext());
 
-        foreach (DataHolder\Promotions::$promotions as $promotion) {
-            $promotion = $this->parseTranslations($promotion);
+        $parentCategory = [
+            'id' => Uuid::randomHex(),
+            'parent' => $catalogCategory['id'],
+            'active' => true,
+            'visible' => true,
+            'type' => 'folder',
+            'translations' => [
+                [
+                    'languageId' => $enLanguageId,
+                    'name' => 'Legal information'
+                ],
+                [
+                    'languageId' => $deLanguageId,
+                    'name' => 'Rechtliche Hinweise'
+                ]
+            ]
+        ];
 
-            foreach ($salesChannels as $salesChannel) {
-                $promotion['salesChannels'][] = [
-                    'id' => Uuid::randomHex(),
-                    'priority' => 1,
-                    'promotionId' => $promotion['id'],
-                    'salesChannelId' => $salesChannel
-                ];
-            }
+        $categoryRepository->upsert([$parentCategory], $this->context->getContext());
 
-            try {
-                $this->promitionRepository->upsert(
-                    [$promotion],
-                    Context::createDefaultContext()
-                );
-            }
-            catch (Exception $exception) {}
-        }
+        $imprintCategory = [
+            'id' => Uuid::randomHex(),
+            'parent' => $parentCategory['id'],
+            'active' => true,
+            'visible' => true,
+            'type' => 'link',
+            'translations' => [
+                [
+                    'languageId' => $enLanguageId,
+                    'name' => 'Imprint',
+                    'linkType' => 'external',
+                    'externalLink' => '/imprint'
+                ],
+                [
+                    'languageId' => $deLanguageId,
+                    'name' => 'Impressum',
+                    'linkType' => 'external',
+                    'externalLink' => '/impressum'
+                ]
+            ]
+        ];
+
+        $categoryRepository->upsert([$imprintCategory], $this->context->getContext());
+
     }
 }

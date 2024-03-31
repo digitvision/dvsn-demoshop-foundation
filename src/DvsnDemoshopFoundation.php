@@ -35,12 +35,7 @@ class DvsnDemoshopFoundation extends Plugin
         $installer = new Setup\Install(
             $installContext,
             $this->container->get(Connection::class),
-            $this->container->get('custom_field_set.repository'),
-            $this->container->get('number_range.repository'),
-            $this->container->get('mail_template.repository'),
-            $this->container->get('document_type.repository'),
-            $this->container->get('document_base_config.repository'),
-            $this->container->get('promotion.repository')
+            $this->container
         );
         $installer->install();
 

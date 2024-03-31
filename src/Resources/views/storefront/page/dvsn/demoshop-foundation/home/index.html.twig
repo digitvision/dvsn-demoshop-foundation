@@ -1,0 +1,37 @@
+
+{% sw_extends '@Storefront/storefront/base.html.twig' %}
+
+{% block base_main_inner %}
+    <div class="container-main">
+        <div class="cms-sections">
+            <div class="cms-section pos-0 cms-section-default">
+                <div class="cms-section-default boxed">
+                    {% for element in page.elements %}
+                        {% if element.type == 'alert' %}
+                            {% sw_include '@Storefront/storefront/utilities/alert.html.twig' with {
+                                type: element.payload.type,
+                                content: element.translated.translatablePayload.content
+                            } %}
+                        {% endif %}
+
+                        {% if element.type == 'content' %}
+                            <div class="{{ element.payload.cls }}">
+                                {{ element.translated.translatablePayload.content|raw }}
+                            </div>
+                        {% endif %}
+
+                        {% if element.type == 'products' %}
+                            {% sw_include '@Storefront/storefront/page/dvsn/demoshop-foundation/home/type/products/listing.html.twig' with {
+                                searchResult: element.extensions.products.products,
+                                sidebar: false,
+                                boxLayout: element.payload.boxLayout,
+                                disableEmptyFilter: false,
+                                listingColumns: element.payload.listingColumns
+                            } %}
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

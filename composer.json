@@ -1,0 +1,44 @@
+{
+    "name": "dvsn/demoshop-foundation",
+    "description": "Demoshop Foundation",
+    "version": "0.0.1",
+    "license": "proprietary",
+    "type": "shopware-platform-plugin",
+    "authors": [
+        {
+            "name": "digitvision",
+            "homepage": "https://www.digitvision.de"
+        }
+    ],
+    "require": {
+        "shopware/core": "^6.6",
+        "shopware/storefront": "^6.6",
+        "shopware/administration": "^6.6"
+    },
+    "autoload": {
+        "psr-4": {
+            "Dvsn\\DemoshopFoundation\\": "src/"
+        }
+    },
+    "extra": {
+        "shopware-plugin-class": "Dvsn\\DemoshopFoundation\\DvsnDemoshopFoundation",
+        "copyright": "digitvision",
+        "plugin-icon": "src/Resources/plugin.png",
+        "label": {
+            "de-DE": "Demoshop Foundation",
+            "en-GB": "Demoshop Foundation"
+        },
+        "description": {
+            "de-DE": "Demoshop Foundation",
+            "en-GB": "Demoshop Foundation"
+        },
+        "manufacturerLink": {
+            "de-DE": "https://www.digitvision.de",
+            "en-GB": "https://www.digitvision.de"
+        },
+        "supportLink": {
+            "de-DE": "https://www.digitvision.de",
+            "en-GB": "https://www.digitvision.de"
+        }
+    }
+}

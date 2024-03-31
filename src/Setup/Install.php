@@ -39,6 +39,7 @@ class Install
     public function install(): void
     {
 
+        $this->installCategories();
 
     }
 

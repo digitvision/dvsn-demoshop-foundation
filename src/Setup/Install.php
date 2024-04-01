@@ -10,7 +10,6 @@
 
 namespace Dvsn\DemoshopFoundation\Setup;
 
-use Exception;
 use Doctrine\DBAL\Connection;
 use Shopware\Core\Content\Category\CategoryEntity;
 use Shopware\Core\Defaults;
@@ -22,6 +21,8 @@ use Shopware\Core\Framework\DataAbstractionLayer\Search\Sorting\FieldSorting;
 use Shopware\Core\Framework\Plugin\Context\InstallContext;
 use Shopware\Core\Framework\Uuid\Uuid;
 use Shopware\Core\System\Language\LanguageEntity;
+use Shopware\Core\System\SalesChannel\SalesChannelEntity;
+use Shopware\Core\System\Snippet\Aggregate\SnippetSet\SnippetSetEntity;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class Install
@@ -38,28 +39,14 @@ class Install
 
     public function install(): void
     {
-
         $this->installCategories();
-
+        $this->installSalesChannel();
+        $this->updateAdminUser();
     }
 
-    private function installCategories()
+    private function installCategories(): void
     {
-        $enLanguageId = Defaults::LANGUAGE_SYSTEM;
-        $deLanguageId = null;
-
-        /** @var EntityRepository $languageRepository */
-        $languageRepository = $this->container->get('language.repository');
-
-        /** @var LanguageEntity $deLanguage */
-        $deLanguage = $languageRepository->search(
-            (new Criteria())->addAssociations(['locale'])->addFilter(new EqualsFilter('locale.code', 'de-DE')),
-            $this->context->getContext()
-        )->first();
-
-        $deLanguageId = $deLanguage->getId();
-
-
+        $languages = $this->getLanguages();
 
         /** @var EntityRepository $categoryRepository */
         $categoryRepository = $this->container->get('category.repository');
@@ -78,11 +65,11 @@ class Install
             'type' => 'page',
             'translations' => [
                 [
-                    'languageId' => $enLanguageId,
+                    'languageId' => $languages['en'],
                     'name' => 'Catalogue #2'
                 ],
                 [
-                    'languageId' => $deLanguageId,
+                    'languageId' => $languages['de'],
                     'name' => 'Katalog #2'
                 ]
             ]
@@ -92,17 +79,17 @@ class Install
 
         $parentCategory = [
             'id' => Uuid::randomHex(),
-            'parent' => $catalogCategory['id'],
+            'parentId' => $catalogCategory['id'],
             'active' => true,
             'visible' => true,
             'type' => 'folder',
             'translations' => [
                 [
-                    'languageId' => $enLanguageId,
+                    'languageId' => $languages['en'],
                     'name' => 'Legal information'
                 ],
                 [
-                    'languageId' => $deLanguageId,
+                    'languageId' => $languages['de'],
                     'name' => 'Rechtliche Hinweise'
                 ]
             ]
@@ -112,19 +99,19 @@ class Install
 
         $imprintCategory = [
             'id' => Uuid::randomHex(),
-            'parent' => $parentCategory['id'],
+            'parentId' => $parentCategory['id'],
             'active' => true,
             'visible' => true,
             'type' => 'link',
             'translations' => [
                 [
-                    'languageId' => $enLanguageId,
+                    'languageId' => $languages['en'],
                     'name' => 'Imprint',
                     'linkType' => 'external',
-                    'externalLink' => '/imprint'
+                    'externalLink' => '/en/imprint'
                 ],
                 [
-                    'languageId' => $deLanguageId,
+                    'languageId' => $languages['de'],
                     'name' => 'Impressum',
                     'linkType' => 'external',
                     'externalLink' => '/impressum'
@@ -132,7 +119,171 @@ class Install
             ]
         ];
 
-        $categoryRepository->upsert([$imprintCategory], $this->context->getContext());
+        $privacyPolicyCategory = [
+            'id' => Uuid::randomHex(),
+            'parentId' => $parentCategory['id'],
+            'afterCategoryId' => $imprintCategory['id'],
+            'active' => true,
+            'visible' => true,
+            'type' => 'link',
+            'translations' => [
+                [
+                    'languageId' => $languages['en'],
+                    'name' => 'Privacy policy',
+                    'linkType' => 'external',
+                    'externalLink' => '/en/privacy-policy'
+                ],
+                [
+                    'languageId' => $languages['de'],
+                    'name' => 'Datenschutz',
+                    'linkType' => 'external',
+                    'externalLink' => '/datenschutz'
+                ]
+            ]
+        ];
 
+        $categoryRepository->upsert([$imprintCategory, $privacyPolicyCategory], $this->context->getContext());
+
+        $this->connection->update(
+            'sales_channel',
+            ['footer_category_id' => Uuid::fromHexToBytes($catalogCategory['id'])],
+            ['active' => 1, 'type_id' => Uuid::fromHexToBytes(Defaults::SALES_CHANNEL_TYPE_STOREFRONT)]
+        );
+    }
+
+    private function installSalesChannel(): void
+    {
+        /** @var EntityRepository $salesChannelRepository */
+        $salesChannelRepository = $this->container->get('sales_channel.repository');
+
+        /** @var EntityRepository $salesChannelDomainRepository */
+        $salesChannelDomainRepository = $this->container->get('sales_channel_domain.repository');
+
+        $languages = $this->getLanguages();
+
+        /** @var SalesChannelEntity $salesChannel */
+        $salesChannel = $salesChannelRepository->search(
+            (new Criteria())->addAssociations(['domains'])->addFilter(new EqualsFilter('typeId', Defaults::SALES_CHANNEL_TYPE_STOREFRONT)),
+            $this->context->getContext()
+        )->first();
+
+        if ($salesChannel->getLanguageId() === $languages['de']) {
+            $salesChannelDomain = $salesChannel->getDomains()->first();
+
+            $domain = $salesChannelDomain->getUrl();
+            $domain = str_replace(['https://', 'http://'], '', $domain);
+
+            /** @var EntityRepository $snippetSetRepository */
+            $snippetSetRepository = $this->container->get('snippet_set.repository');
+
+            /** @var SnippetSetEntity $snippetSet */
+            $snippetSet = $snippetSetRepository->search(
+                (new Criteria())->addFilter(new EqualsFilter('iso', 'en-GB')),
+                $this->context->getContext()
+            )->first();
+
+            $salesChannelDomainRepository->create([[
+                'id' => Uuid::randomHex(),
+                'salesChannelId' => $salesChannel->getId(),
+                'languageId' => $languages['en'],
+                'url' => 'https://' . $domain . '/en',
+                'currencyId' => Defaults::CURRENCY,
+                'snippetSetId' => $snippetSet->getId(),
+                'hreflangUseOnlyLocale' => false
+            ]], $this->context->getContext());
+
+            /** @var EntityRepository $salesChannelLanguageRepository */
+            $salesChannelLanguageRepository = $this->container->get('sales_channel_language.repository');
+
+            $salesChannelLanguageRepository->upsert([[
+                'salesChannelId' => $salesChannel->getId(),
+                'languageId' => $languages['en']
+            ]], $this->context->getContext());
+        }
+
+        if ($salesChannel->getLanguageId() === $languages['en']) {
+            $salesChannelDomain = $salesChannel->getDomains()->first();
+
+            $domain = $salesChannelDomain->getUrl();
+            $domain = str_replace(['https://', 'http://'], '', $domain);
+
+            $salesChannelDomainRepository->update([[
+                'id' => $salesChannelDomain->getId(),
+                'url' => 'https://' . $domain . '/en'
+            ]], $this->context->getContext());
+
+            /** @var EntityRepository $snippetSetRepository */
+            $snippetSetRepository = $this->container->get('snippet_set.repository');
+
+            /** @var SnippetSetEntity $snippetSet */
+            $snippetSet = $snippetSetRepository->search(
+                (new Criteria())->addFilter(new EqualsFilter('iso', 'de-DE')),
+                $this->context->getContext()
+            )->first();
+
+            $salesChannelDomainRepository->create([[
+                'id' => Uuid::randomHex(),
+                'salesChannelId' => $salesChannel->getId(),
+                'languageId' => $languages['de'],
+                'url' => 'https://' . $domain,
+                'currencyId' => Defaults::CURRENCY,
+                'snippetSetId' => $snippetSet->getId(),
+                'hreflangUseOnlyLocale' => false
+            ]], $this->context->getContext());
+
+            /** @var EntityRepository $salesChannelLanguageRepository */
+            $salesChannelLanguageRepository = $this->container->get('sales_channel_language.repository');
+
+            $salesChannelLanguageRepository->upsert([[
+                'salesChannelId' => $salesChannel->getId(),
+                'languageId' => $languages['de']
+            ]], $this->context->getContext());
+        }
+    }
+
+    private function updateAdminUser(): void
+    {
+        $languages = $this->getLanguages();
+
+        /** @var EntityRepository $languageRepository */
+        $languageRepository = $this->container->get('language.repository');
+
+        /** @var LanguageEntity $deLanguage */
+        $deLanguage = $languageRepository->search(
+            (new Criteria([$languages['de']])),
+            Context::createDefaultContext()
+        )->first();
+
+        $query = '
+            UPDATE `user`
+            SET `locale_id` = :id
+        ';
+        $this->connection->executeStatement(
+            $query,
+            ['id' => Uuid::fromHexToBytes($deLanguage->getLocaleId())]
+        );
+    }
+
+    public function getLanguages(): array
+    {
+        /** @var EntityRepository $languageRepository */
+        $languageRepository = $this->container->get('language.repository');
+
+        /** @var LanguageEntity $deLanguage */
+        $deLanguage = $languageRepository->search(
+            (new Criteria())->addAssociations(['locale'])->addFilter(new EqualsFilter('locale.code', 'de-DE')),
+            Context::createDefaultContext()
+        )->first();
+
+        /** @var LanguageEntity $enLanguage */
+        $enLanguage = $languageRepository->search(
+            (new Criteria())->addAssociations(['locale'])->addFilter(new EqualsFilter('locale.code', 'en-GB')),
+            Context::createDefaultContext()
+        )->first();
+
+        return [
+            'de' => $deLanguage->getId(),
+            'en' => $enLanguage->getId()
+        ];
     }
 }

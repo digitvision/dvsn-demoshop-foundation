@@ -14,5 +14,15 @@
                 <argument type="service" id="twig"/>
             </call>
         </service>
+
+        <service id="Dvsn\DemoshopFoundation\Storefront\Controller\ContentController" public="true">
+            <argument type="service" id="Shopware\Storefront\Page\GenericPageLoader"/>
+            <call method="setContainer">
+                <argument type="service" id="service_container"/>
+            </call>
+            <call method="setTwig">
+                <argument type="service" id="twig"/>
+            </call>
+        </service>
     </services>
 </container>

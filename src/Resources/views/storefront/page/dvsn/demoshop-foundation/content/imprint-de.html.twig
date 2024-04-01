@@ -1,0 +1,45 @@
+
+{% sw_extends '@Storefront/storefront/base.html.twig' %}
+
+{% block base_main_inner %}
+    <div class="container-main">
+        <div class="cms-sections">
+            <div class="cms-section pos-0 cms-section-default">
+                <div class="cms-section-default boxed">
+                    {% sw_include '@Storefront/storefront/utilities/alert.html.twig' with {
+                        type: 'danger',
+                        content: "dvsn-demoshop-foundation.home.demoshop-alert"|trans
+                    } %}
+
+                    <br />
+                    <h1>Impressum</h1>
+                    <br />
+
+                    <p>Eike Brandt-Warneke<br />
+                        Hevener Stra&szlig;e 65<br />
+                        44797 Bochum</p>
+
+                    <h4>Kontakt</h4>
+                    <p>Telefon: +49 (0) 234 97354482<br />
+                        E-Mail: <script type="text/javascript">var str = 'vision';str = 'digit' + str + '.de';str = 'info' + '@' + str;document.write(str);</script></p>
+
+                    <h4>Umsatzsteuer-ID</h4>
+                    <p>Umsatzsteuer-Identifikationsnummer gem&auml;&szlig; &sect; 27 a Umsatzsteuergesetz:<br />
+                        DE327303257</p>
+
+                    <h4>Angaben zur Berufs&shy;haftpflicht&shy;versicherung</h4>
+                    <p><strong>Name und Sitz des Versicherers:</strong><br />
+                        Allianz Deutschland AG<br />
+                        K&ouml;niginstra&szlig;e 28<br />
+                        80802 M&uuml;nchen</p>
+                    <p><strong>Geltungsraum der Versicherung:</strong><br />Deutschland</p>
+
+                    <h4>Verbraucher&shy;streit&shy;beilegung/Universal&shy;schlichtungs&shy;stelle</h4>
+                    <p>Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.</p>
+
+                    <p>Quelle: <a href="https://www.e-recht24.de">eRecht24</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -5,6 +5,18 @@
             "meta": {
                 "title": "Demoshop Plugin Example"
             }
+        },
+        "content": {
+            "imprint": {
+                "meta": {
+                    "title": "Impressum"
+                }
+            },
+            "privacy-policy": {
+                "meta": {
+                    "title": "Datenschutz"
+                }
+            }
         }
     }
 }

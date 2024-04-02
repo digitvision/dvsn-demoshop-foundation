@@ -25,7 +25,7 @@ class TestController extends StorefrontController
     public function test(Request $request, RequestDataBag $data, Context $context, SalesChannelContext $salesChannelContext): void
     {
         dd('disabled');
-        
+
         /** @var BaseService $baseService */
         $baseService = $this->container->get('Dvsn\DemoshopFoundation\Service\BaseService');
 

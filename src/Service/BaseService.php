@@ -10,6 +10,7 @@
 
 namespace Dvsn\DemoshopFoundation\Service;
 
+use Doctrine\DBAL\Connection;
 use Shopware\Core\Content\Category\CategoryEntity;
 use Shopware\Core\Content\Product\Aggregate\ProductMedia\ProductMediaEntity;
 use Shopware\Core\Content\Product\ProductEntity;
@@ -368,5 +369,36 @@ class BaseService
             [$element],
             $this->getContext()
         );
+    }
+
+    public function parseSql(string $query)
+    {
+        /** @var Connection $connection */
+        $connection = $this->container->get('Doctrine\DBAL\Connection');
+
+        $languages = $this->getLanguages();
+
+        $query = str_replace(
+            [':de', ':en'],
+            ['0x' . $languages['de'], '0x' . $languages['en']],
+            $query
+        );
+
+        $str = '
+            SELECT LOWER(HEX(id)) AS id, product_number
+            FROM product
+            ORDER BY parent_id DESC
+        ';
+        $products = $connection->fetchAllAssociative($str);
+
+        foreach ($products as $product) {
+            $query = str_replace(
+                ':product-' . $product['product_number'],
+                '0x' . $product['id'],
+                $query
+            );
+        }
+
+        return $query;
     }
 }

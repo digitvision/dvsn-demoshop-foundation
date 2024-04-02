@@ -122,33 +122,41 @@ class BaseService
         return $productStream;
     }
 
+    function getLastCategory(): CategoryEntity
+    {
+        /** @var EntityRepository $categoryRepository */
+        $categoryRepository = $this->container->get('category.repository');
+
+        /** @var CategoryEntity $root */
+        $root = $categoryRepository->search(
+            (new Criteria())
+                ->addFilter(new EqualsFilter('level', 1))
+                ->addSorting(new FieldSorting('autoIncrement', 'ASC'))
+                ->setLimit(1),
+            $this->getContext()
+        )->first();
+
+        /** @var CategoryEntity $lastCategory */
+        $lastCategory = $categoryRepository->search(
+            (new Criteria())
+                ->addFilter(new EqualsFilter('parentId', $root->getId()))
+                ->addSorting(new FieldSorting('autoIncrement', 'DESC'))
+                ->setLimit(1),
+            $this->getContext()
+        )->first();
+
+        return $lastCategory;
+    }
+
     function createCategory(string $deName, string $enName, ?string $parentId = null, ?string $afterCategoryId = null): CategoryEntity
     {
         /** @var EntityRepository $categoryRepository */
         $categoryRepository = $this->container->get('category.repository');
 
-        $languages = $this->getLanguages();
-
         if ($parentId === null && $afterCategoryId === null) {
-            /** @var CategoryEntity $root */
-            $root = $categoryRepository->search(
-                (new Criteria())
-                    ->addFilter(new EqualsFilter('level', 1))
-                    ->addSorting(new FieldSorting('autoIncrement', 'ASC'))
-                    ->setLimit(1),
-                $this->getContext()
-            )->first();
+            $lastCategory = $this->getLastCategory();
 
-            /** @var CategoryEntity $lastCategory */
-            $lastCategory = $categoryRepository->search(
-                (new Criteria())
-                    ->addFilter(new EqualsFilter('parentId', $root->getId()))
-                    ->addSorting(new FieldSorting('autoIncrement', 'DESC'))
-                    ->setLimit(1),
-                $this->getContext()
-            )->first();
-
-            $parentId = $root->getId();
+            $parentId = $lastCategory->getParentId();
             $afterCategoryId = $lastCategory->getId();
         }
 

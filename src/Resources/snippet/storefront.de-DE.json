@@ -1,7 +1,7 @@
 {
     "dvsn-demoshop-foundation": {
         "home": {
-            "demoshop-alert": "Dies ist ein Demo-Shop zur Präsentation von Plugins und <strong>kein</strong> Live-Shop!<br />Aufgegebene Bestellungen werden <strong>nicht</strong> bearbeitet oder versendet",
+            "demoshop-alert": "Dies ist ein Demo-Shop zur Präsentation von Plugins und <strong>kein</strong> Live-Shop!<br />Aufgegebene Bestellungen werden <strong>nicht</strong> bearbeitet oder versendet!",
             "meta": {
                 "title": "Demoshop Plugin Example"
             }

@@ -1,7 +1,7 @@
 {
     "name": "dvsn/demoshop-foundation",
     "description": "Demoshop Foundation",
-    "version": "0.0.4",
+    "version": "0.0.5",
     "license": "proprietary",
     "type": "shopware-platform-plugin",
     "authors": [
@@ -29,8 +29,8 @@
             "en-GB": "Demoshop Foundation"
         },
         "description": {
-            "de-DE": "Demoshop Foundation",
-            "en-GB": "Demoshop Foundation"
+            "de-DE": "Demoshop Foundation Plugin",
+            "en-GB": "Demoshop Foundation Plugin"
         },
         "manufacturerLink": {
             "de-DE": "https://www.digitvision.de",

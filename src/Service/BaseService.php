@@ -75,15 +75,9 @@ class BaseService
 
         $productStreamRepository->create([[
             'id' => $id,
-            'translations' => [
-                [
-                    'languageId' => $languages['de'],
-                    'name' => 'Alle Produkte'
-                ],
-                [
-                    'languageId' => $languages['en'],
-                    'name' => 'All products'
-                ]
+            'name' => [
+                'de-DE' => 'Alle Produkte',
+                'en-GB' => 'All products'
             ],
             'filters' => [
                 [
@@ -164,15 +158,9 @@ class BaseService
             'active' => true,
             'visible' => true,
             'type' => 'page',
-            'translations' => [
-                [
-                    'languageId' => $languages['de'],
-                    'name' => $deName
-                ],
-                [
-                    'languageId' => $languages['en'],
-                    'name' => $enName
-                ]
+            'name' => [
+                'de-DE' => $deName,
+                'en-GB' => $enName
             ]
         ];
 
@@ -212,9 +200,11 @@ class BaseService
             )->getElements();
 
             $covers = array_values($covers);
-            $random = array_rand($covers, 1);
 
-            $productMedia = $covers[$random];
+            srand();
+            $index = rand(0, count($covers) - 1);
+
+            $productMedia = $covers[$index];
         }
 
         if ($salesChannel === null) {

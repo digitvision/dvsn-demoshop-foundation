@@ -395,7 +395,7 @@ class BaseService
         $str = '
             SELECT LOWER(HEX(id)) AS id, product_number
             FROM product
-            ORDER BY parent_id DESC
+            ORDER BY parent_id DESC, product_number DESC
         ';
         $products = $connection->fetchAllAssociative($str);
 

@@ -11,6 +11,7 @@
 namespace Dvsn\DemoshopFoundation\Storefront\Controller;
 
 use Dvsn\DemoshopFoundation\Service\BaseService;
+use Dvsn\DemoshopFoundation\Service\VariantService;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\Validation\DataBag\RequestDataBag;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
@@ -67,5 +68,16 @@ SQL;
 
         echo nl2br($query);
         die();
+    }
+
+    #[Route(path: 'test', name: 'test', options: ['seo' => true], defaults: ['_httpCache' => false], methods: ['GET'])]
+    public function test(Request $request, RequestDataBag $data, Context $context, SalesChannelContext $salesChannelContext): void
+    {
+        dd('disabled');
+
+        /** @var VariantService $variantService */
+        $variantService = $this->container->get('Dvsn\DemoshopFoundation\Service\VariantService');
+
+        dd($variantService->updateTshirt());
     }
 }

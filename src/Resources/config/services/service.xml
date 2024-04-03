@@ -6,5 +6,11 @@
         <service id="Dvsn\DemoshopFoundation\Service\BaseService" public="true">
             <argument type="service" id="service_container"/>
         </service>
+
+        <service id="Dvsn\DemoshopFoundation\Service\VariantService" public="true">
+            <argument type="service" id="service_container"/>
+            <argument type="service" id="Shopware\Core\Content\Media\MediaService"/>
+            <argument>%dvsn.demoshop_foundation.path%</argument>
+        </service>
     </services>
 </container>

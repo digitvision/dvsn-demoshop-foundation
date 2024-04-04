@@ -33,6 +33,8 @@ class Uninstall
 
     public function uninstall(): void
     {
+        throw new \Exception('uninstall method not allowed');
+
         if ($this->context->keepUserData()) {
             return;
         }

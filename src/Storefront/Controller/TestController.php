@@ -12,12 +12,18 @@ namespace Dvsn\DemoshopFoundation\Storefront\Controller;
 
 use Dvsn\DemoshopFoundation\Service\BaseService;
 use Dvsn\DemoshopFoundation\Service\VariantService;
+use Shopware\Core\Checkout\Customer\Aggregate\CustomerGroup\CustomerGroupEntity;
 use Shopware\Core\Defaults;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
+use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
+use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
 use Shopware\Core\Framework\Uuid\Uuid;
 use Shopware\Core\Framework\Validation\DataBag\RequestDataBag;
+use Shopware\Core\System\Country\CountryEntity;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
+use Shopware\Core\System\SalesChannel\SalesChannelEntity;
+use Shopware\Core\System\Salutation\SalutationEntity;
 use Shopware\Storefront\Controller\StorefrontController;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Request;
@@ -25,6 +31,24 @@ use Symfony\Component\HttpFoundation\Request;
 #[Route(defaults: ['_routeScope' => ['storefront']])]
 class TestController extends StorefrontController
 {
+    #[Route(path: '/dvsn/demoshop-foundation/test/create-home-element-alert', name: 'dvsn.demoshop-foundation.test.create-home-element-alert', options: ['seo' => true], defaults: ['_httpCache' => false], methods: ['GET'])]
+    public function createHomeElementAlert(Request $request, RequestDataBag $data, Context $context, SalesChannelContext $salesChannelContext): void
+    {
+        dd('disabled');
+
+        /** @var BaseService $baseService */
+        $baseService = $this->container->get('Dvsn\DemoshopFoundation\Service\BaseService');
+
+        $baseService->createHomeElementAlert(
+            'Dieser Demoshop dient der Präsentation unseres Plugins<br><strong>Produkt Konfigurator für Sets / Bundles</strong>',
+            'This demo store is used to present our plugin<br><strong>Product configurator for sets / bundles</strong>',
+            2,
+            'success'
+        );
+
+        dd('ende');
+    }
+
     #[Route(path: '/dvsn/demoshop-foundation/test/create-category', name: 'dvsn.demoshop-foundation.test.create-category', options: ['seo' => true], defaults: ['_httpCache' => false], methods: ['GET'])]
     public function createCategory(Request $request, RequestDataBag $data, Context $context, SalesChannelContext $salesChannelContext): void
     {
@@ -560,4 +584,107 @@ SQL;
 
         dd($configuratorA);
     }
+
+    #[Route(path: '/dvsn/demoshop-foundation/test/create-customer', name: 'dvsn.demoshop-foundation.test.create-customer', options: ['seo' => true], defaults: ['_httpCache' => false], methods: ['GET'])]
+    public function createCustomer(Request $request, RequestDataBag $data, Context $context, SalesChannelContext $salesChannelContext): void
+    {
+        dd('disabled');
+        
+        /** @var EntityRepository $customerRepository */
+        $customerRepository = $this->container->get('customer.repository');
+
+        /** @var EntityRepository $customerGroupRepository */
+        $customerGroupRepository = $this->container->get('customer_group.repository');
+
+        /** @var BaseService $baseService */
+        $baseService = $this->container->get('Dvsn\DemoshopFoundation\Service\BaseService');
+
+        /** @var EntityRepository $salesChannelRepository */
+        $salesChannelRepository = $this->container->get('sales_channel.repository');
+
+        /** @var EntityRepository $salutationRepository */
+        $salutationRepository = $this->container->get('salutation.repository');
+
+        /** @var EntityRepository $salutationRepository */
+        $countryRepository = $this->container->get('country.repository');
+
+        $languages = $baseService->getLanguages();
+
+        /** @var CustomerGroupEntity $customerGroup */
+        $customerGroup = $customerGroupRepository->search(
+            (new Criteria())->setLimit(1),
+            $context
+        )->first();
+
+        /** @var SalesChannelEntity $salesChannel */
+        $salesChannel = $salesChannelRepository->search(
+            (new Criteria())->addAssociations(['domains'])->addFilter(new EqualsFilter('typeId', Defaults::SALES_CHANNEL_TYPE_STOREFRONT))->setLimit(1),
+            $context
+        )->first();
+
+        /** @var SalutationEntity $salutation */
+        $salutation = $salutationRepository->search(
+            (new Criteria())->addFilter(new EqualsFilter('salutationKey', 'mr'))->setLimit(1),
+            $context
+        )->first();
+
+        /** @var CountryEntity $country */
+        $country = $countryRepository->search(
+            (new Criteria())->addFilter(new EqualsFilter('iso', 'DE'))->setLimit(1),
+            $context
+        )->first();
+
+        $customer = [
+            'id' => Uuid::randomHex(),
+            'customerNumber' => '9999',
+            'salesChannelId' => $salesChannel->getId(),
+            'boundSalesChannelId' => null,
+            'languageId' => $languages['de'],
+            'groupId' => $customerGroup->getId(),
+            'requestedGroupId' => null,
+            'defaultPaymentMethodId' => $salesChannel->getPaymentMethodId(),
+            'salutationId' => $salutation->getId(),
+            'firstName' => 'Max',
+            'lastName' => 'Mustermann',
+            'email' => 'max@mustermann.de',
+            'password' => '$2y$10$9rjt2sVaF8iv8kXAdS1mZ.NAxSUHyUexE0xfi6p8/DJToLl1i7dF2',
+            'title' => null,
+            'affiliateCode' => null,
+            'campaignCode' => null,
+            'active' => true,
+            'birthday' => null,
+            'guest' => false,
+            'accountType' => 'private',
+            'firstLogin' => new \DateTimeImmutable(),
+            'addresses' => [],
+            'customFields' => []
+        ];
+
+        $address = [
+            'id' => Uuid::randomHex(),
+            'salutationId' => $salutation->getId(),
+            'firstName' => 'Max',
+            'lastName' => 'Mustermann',
+            'street' => 'Willy-Brandt-Straße 1',
+            'zipcode' => '10557',
+            'city' => 'Berlin',
+            'countryId' => $country->getId(),
+            'countryStateId' => null
+        ];
+
+        $address['customerId'] = $customer['id'];
+
+        $customer['defaultShippingAddressId'] = $address['id'];
+        $customer['defaultBillingAddressId'] = $address['id'];
+        $customer['addresses'][] = $address;
+
+
+        $customerRepository->create(
+            [$customer],
+            $context
+        );
+
+        dd("ende");
+    }
+
 }

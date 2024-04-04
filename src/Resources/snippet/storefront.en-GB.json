@@ -17,6 +17,11 @@
                     "title": "Privacy Policy"
                 }
             }
+        },
+        "account": {
+            "login": {
+                "alert": "Please click on \"Log in\" to log in directly with a test customer in the store."
+            }
         }
     }
 }

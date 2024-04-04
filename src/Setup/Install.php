@@ -11,6 +11,7 @@
 namespace Dvsn\DemoshopFoundation\Setup;
 
 use Doctrine\DBAL\Connection;
+use Shopware\Core\Checkout\Customer\Aggregate\CustomerGroup\CustomerGroupEntity;
 use Shopware\Core\Content\Category\CategoryEntity;
 use Shopware\Core\Defaults;
 use Shopware\Core\Framework\Context;
@@ -20,8 +21,10 @@ use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Sorting\FieldSorting;
 use Shopware\Core\Framework\Plugin\Context\InstallContext;
 use Shopware\Core\Framework\Uuid\Uuid;
+use Shopware\Core\System\Country\CountryEntity;
 use Shopware\Core\System\Language\LanguageEntity;
 use Shopware\Core\System\SalesChannel\SalesChannelEntity;
+use Shopware\Core\System\Salutation\SalutationEntity;
 use Shopware\Core\System\Snippet\Aggregate\SnippetSet\SnippetSetEntity;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -42,6 +45,7 @@ class Install
         $this->installCategories();
         $this->installSalesChannel();
         $this->updateAdminUser();
+        $this->installMaxMustermann();
     }
 
     private function installCategories(): void
@@ -285,5 +289,99 @@ class Install
             'de' => $deLanguage->getId(),
             'en' => $enLanguage->getId()
         ];
+    }
+
+    private function installMaxMustermann(): void
+    {
+        /** @var EntityRepository $customerRepository */
+        $customerRepository = $this->container->get('customer.repository');
+
+        /** @var EntityRepository $customerGroupRepository */
+        $customerGroupRepository = $this->container->get('customer_group.repository');
+
+        /** @var EntityRepository $salesChannelRepository */
+        $salesChannelRepository = $this->container->get('sales_channel.repository');
+
+        /** @var EntityRepository $salutationRepository */
+        $salutationRepository = $this->container->get('salutation.repository');
+
+        /** @var EntityRepository $salutationRepository */
+        $countryRepository = $this->container->get('country.repository');
+
+        $languages = $this->getLanguages();
+
+        /** @var CustomerGroupEntity $customerGroup */
+        $customerGroup = $customerGroupRepository->search(
+            (new Criteria())->setLimit(1),
+            Context::createDefaultContext()
+        )->first();
+
+        /** @var SalesChannelEntity $salesChannel */
+        $salesChannel = $salesChannelRepository->search(
+            (new Criteria())->addAssociations(['domains'])->addFilter(new EqualsFilter('typeId', Defaults::SALES_CHANNEL_TYPE_STOREFRONT))->setLimit(1),
+            Context::createDefaultContext()
+        )->first();
+
+        /** @var SalutationEntity $salutation */
+        $salutation = $salutationRepository->search(
+            (new Criteria())->addFilter(new EqualsFilter('salutationKey', 'mr'))->setLimit(1),
+            Context::createDefaultContext()
+        )->first();
+
+        /** @var CountryEntity $country */
+        $country = $countryRepository->search(
+            (new Criteria())->addFilter(new EqualsFilter('iso', 'DE'))->setLimit(1),
+            Context::createDefaultContext()
+        )->first();
+
+        $customer = [
+            'id' => Uuid::randomHex(),
+            'customerNumber' => '9999',
+            'salesChannelId' => $salesChannel->getId(),
+            'boundSalesChannelId' => null,
+            'languageId' => $languages['de'],
+            'groupId' => $customerGroup->getId(),
+            'requestedGroupId' => null,
+            'defaultPaymentMethodId' => $salesChannel->getPaymentMethodId(),
+            'salutationId' => $salutation->getId(),
+            'firstName' => 'Max',
+            'lastName' => 'Mustermann',
+            'email' => 'max@mustermann.de',
+            'password' => '$2y$10$9rjt2sVaF8iv8kXAdS1mZ.NAxSUHyUexE0xfi6p8/DJToLl1i7dF2',
+            'title' => null,
+            'affiliateCode' => null,
+            'campaignCode' => null,
+            'active' => true,
+            'birthday' => null,
+            'guest' => false,
+            'accountType' => 'private',
+            'firstLogin' => new \DateTimeImmutable(),
+            'addresses' => [],
+            'customFields' => []
+        ];
+
+        $address = [
+            'id' => Uuid::randomHex(),
+            'salutationId' => $salutation->getId(),
+            'firstName' => 'Max',
+            'lastName' => 'Mustermann',
+            'street' => 'Willy-Brandt-Straße 1',
+            'zipcode' => '10557',
+            'city' => 'Berlin',
+            'countryId' => $country->getId(),
+            'countryStateId' => null
+        ];
+
+        $address['customerId'] = $customer['id'];
+
+        $customer['defaultShippingAddressId'] = $address['id'];
+        $customer['defaultBillingAddressId'] = $address['id'];
+        $customer['addresses'][] = $address;
+
+
+        $customerRepository->create(
+            [$customer],
+            Context::createDefaultContext()
+        );
     }
 }

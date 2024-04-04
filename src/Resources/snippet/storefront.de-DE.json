@@ -17,6 +17,11 @@
                     "title": "Datenschutz"
                 }
             }
+        },
+        "account": {
+            "login": {
+                "alert": "Bitte klicken Sie auf \"Anmelden\", um sich direkt mit einem Test-Kunden am Shop anzumelden."
+            }
         }
     }
 }

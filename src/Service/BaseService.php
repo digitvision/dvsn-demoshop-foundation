@@ -387,7 +387,7 @@ class BaseService
         $languages = $this->getLanguages();
 
         $query = str_replace(
-            [':de', ':en'],
+            [':language-de', ':language-en'],
             ['0x' . $languages['de'], '0x' . $languages['en']],
             $query
         );
@@ -408,5 +408,60 @@ class BaseService
         }
 
         return $query;
+    }
+
+    public function parseArray(array $arr): array
+    {
+        /** @var Connection $connection */
+        $connection = $this->container->get('Doctrine\DBAL\Connection');
+
+        $languages = $this->getLanguages();
+
+        $replace = [
+            'language-de' => $languages['de'],
+            'language-en' => $languages['de'],
+        ];
+
+        $str = '
+            SELECT LOWER(HEX(id)) AS id, product_number
+            FROM product
+            ORDER BY parent_id DESC, product_number DESC
+        ';
+        $products = $connection->fetchAllAssociative($str);
+
+        foreach ($products as $product) {
+            $replace['product-' . $product['product_number']] = $product['id'];
+        }
+
+        $arr = $this->parseArrayRecursive($arr, $replace);
+
+        return $arr;
+    }
+
+    private function parseArrayRecursive(array $arr, array $replace): array
+    {
+        foreach ($arr as $key => $value) {
+            if (is_array($value)) {
+                $arr[$key] = $this->parseArrayRecursive($value, $replace);
+                continue;
+            }
+
+            if (!is_string($value)) {
+                continue;
+            }
+
+            $arr[$key] = $this->parseArrayReplaceValue($value, $replace);
+        }
+
+        return $arr;
+    }
+
+    private function parseArrayReplaceValue(string $value, array $replace): string
+    {
+        foreach ($replace as $k => $v) {
+            $value = str_replace($k, $v, $value);
+        }
+
+        return $value;
     }
 }

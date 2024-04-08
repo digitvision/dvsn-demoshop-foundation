@@ -589,7 +589,7 @@ SQL;
     public function createCustomer(Request $request, RequestDataBag $data, Context $context, SalesChannelContext $salesChannelContext): void
     {
         dd('disabled');
-        
+
         /** @var EntityRepository $customerRepository */
         $customerRepository = $this->container->get('customer.repository');
 

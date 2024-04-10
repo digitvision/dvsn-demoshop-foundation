@@ -12,9 +12,11 @@ namespace Dvsn\DemoshopFoundation\Service;
 
 use Doctrine\DBAL\Connection;
 use Shopware\Core\Content\Category\CategoryEntity;
+use Shopware\Core\Content\Media\MediaEntity;
 use Shopware\Core\Content\Product\Aggregate\ProductMedia\ProductMediaEntity;
 use Shopware\Core\Content\Product\ProductEntity;
 use Shopware\Core\Content\ProductStream\ProductStreamEntity;
+use Shopware\Core\Content\Rule\RuleEntity;
 use Shopware\Core\Defaults;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
@@ -62,7 +64,81 @@ class BaseService
         ];
     }
 
-    function createProductStreamAllProducts(): ProductStreamEntity
+    public function getDefaultSalesChannel(): SalesChannelEntity
+    {
+        /** @var EntityRepository $salesChannelRepository */
+        $salesChannelRepository = $this->container->get('sales_channel.repository');
+
+        /** @var SalesChannelEntity $salesChannel */
+        $salesChannel = $salesChannelRepository->search(
+            (new Criteria())->addAssociations(['domains'])->addFilter(new EqualsFilter('typeId', Defaults::SALES_CHANNEL_TYPE_STOREFRONT))->setLimit(1),
+            $this->getContext()
+        )->first();
+
+        return $salesChannel;
+    }
+
+    public function getDefaultTax(): TaxEntity
+    {
+        /** @var EntityRepository $taxRepository */
+        $taxRepository = $this->container->get('tax.repository');
+
+        /** @var TaxEntity $tax */
+        $tax = $taxRepository->search(
+            (new Criteria())->addSorting(new FieldSorting('position', 'ASC'))->setLimit(1),
+            $this->getContext()
+        )->first();
+
+        return $tax;
+    }
+
+    public function getDefaultRule(): RuleEntity
+    {
+        /** @var Connection $connection */
+        $connection = $this->container->get('Doctrine\DBAL\Connection');
+
+        /** @var EntityRepository $ruleRepository */
+        $ruleRepository = $this->container->get('rule.repository');
+
+        $query = '
+            SELECT LOWER(HEX(rule_id)) AS id
+            FROM rule_condition
+            WHERE type = "alwaysValid"
+        ';
+        $id = $connection->fetchOne($query);
+
+        /** @var RuleEntity $rule */
+        $rule = $ruleRepository->search(
+            (new Criteria([$id]))->setLimit(1),
+            $this->getContext()
+        )->first();
+
+        return $rule;
+    }
+
+    public function getRandomMedia(): MediaEntity
+    {
+        /** @var EntityRepository $productMediaRepository */
+        $productMediaRepository = $this->container->get('product_media.repository');
+
+        /** @var ProductMediaEntity[] $covers */
+        $covers = $productMediaRepository->search(
+            (new Criteria())
+                ->addAssociations(['media']),
+            $this->getContext()
+        )->getElements();
+
+        $covers = array_values($covers);
+
+        srand();
+        $index = rand(0, count($covers) - 1);
+
+        $productMedia = $covers[$index];
+
+        return $productMedia->getMedia();
+    }
+
+    public function createProductStreamAllProducts(): ProductStreamEntity
     {
         /** @var EntityRepository $productStreamRepository */
         $productStreamRepository = $this->container->get('product_stream.repository');
@@ -122,7 +198,7 @@ class BaseService
         return $productStream;
     }
 
-    function getLastCategory(): CategoryEntity
+    public function getLastCategory(): CategoryEntity
     {
         /** @var EntityRepository $categoryRepository */
         $categoryRepository = $this->container->get('category.repository');
@@ -148,7 +224,7 @@ class BaseService
         return $lastCategory;
     }
 
-    function createCategory(string $deName, string $enName, ?string $parentId = null, ?string $afterCategoryId = null): CategoryEntity
+    public function createCategory(string $deName, string $enName, ?string $parentId = null, ?string $afterCategoryId = null): CategoryEntity
     {
         /** @var EntityRepository $categoryRepository */
         $categoryRepository = $this->container->get('category.repository');
@@ -184,16 +260,10 @@ class BaseService
         return $category;
     }
 
-    function createProduct(string $deName, string $enName, string $number, float $netPrice, float $grossPrice, CategoryEntity $category, ?ProductMediaEntity $productMedia = null, ?SalesChannelEntity $salesChannel = null, ?TaxEntity $tax = null): ProductEntity
+    public function createProduct(string $deName, string $enName, string $number, float $netPrice, float $grossPrice, CategoryEntity $category, ?ProductMediaEntity $productMedia = null, ?SalesChannelEntity $salesChannel = null, ?TaxEntity $tax = null): ProductEntity
     {
         /** @var EntityRepository $productMediaRepository */
         $productMediaRepository = $this->container->get('product_media.repository');
-
-        /** @var EntityRepository $salesChannelRepository */
-        $salesChannelRepository = $this->container->get('sales_channel.repository');
-
-        /** @var EntityRepository $taxRepository */
-        $taxRepository = $this->container->get('tax.repository');
 
         /** @var EntityRepository $productRepository */
         $productRepository = $this->container->get('product.repository');
@@ -217,19 +287,11 @@ class BaseService
         }
 
         if ($salesChannel === null) {
-            /** @var SalesChannelEntity $salesChannel */
-            $salesChannel = $salesChannelRepository->search(
-                (new Criteria())->addAssociations(['domains'])->addFilter(new EqualsFilter('typeId', Defaults::SALES_CHANNEL_TYPE_STOREFRONT))->setLimit(1),
-                $this->getContext()
-            )->first();
+            $salesChannel = $this->getDefaultSalesChannel();
         }
 
         if ($tax === null) {
-            /** @var TaxEntity $tax */
-            $tax = $taxRepository->search(
-                (new Criteria())->addSorting(new FieldSorting('position', 'ASC'))->setLimit(1),
-                $this->getContext()
-            )->first();
+            $tax = $this->getDefaultTax();
         }
 
         $id = Uuid::randomHex();

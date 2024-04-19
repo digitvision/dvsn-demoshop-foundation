@@ -481,7 +481,7 @@ class BaseService
 
         $replace = [
             'language-de' => $languages['de'],
-            'language-en' => $languages['de'],
+            'language-en' => $languages['en'],
         ];
 
         $str = '

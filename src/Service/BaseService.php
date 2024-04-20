@@ -153,6 +153,7 @@ class BaseService
         $query = '
             SELECT LOWER(HEX(id))
             FROM product
+            WHERE (child_count IS NULL) OR (child_count = 0)
             ORDER BY RAND()
             LIMIT ' . $quantity . '
         ';
@@ -168,7 +169,6 @@ class BaseService
 
         return array_values($products);
     }
-
 
     public function createProductStreamAllProducts(): ProductStreamEntity
     {

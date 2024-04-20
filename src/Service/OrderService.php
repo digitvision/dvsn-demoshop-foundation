@@ -212,7 +212,7 @@ class OrderService
         return $price;
     }
 
-    public function getSalesChannelContext(CustomerEntity $customer, string $salesChannelId): SalesChannelContext
+    private function getSalesChannelContext(CustomerEntity $customer, string $salesChannelId): SalesChannelContext
     {
         return $this->salesChannelContextFactory->create(
             Uuid::randomHex(),

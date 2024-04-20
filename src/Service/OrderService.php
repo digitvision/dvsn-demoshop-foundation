@@ -47,7 +47,7 @@ class OrderService
     ) {
     }
 
-    public function createRandomOrder(?int $productQuantity = null, ?string $customerId = null, ?string $salesChannelId = null): ?OrderEntity
+    public function createRandomOrder(?int $productQuantity = null, array $productsQuantity = [], ?string $customerId = null, ?string $salesChannelId = null): ?OrderEntity
     {
         $context = Context::createDefaultContext();
 
@@ -93,8 +93,9 @@ class OrderService
 
         $lineItems = [];
 
-        foreach ($products as $product) {
-            $lineItems[] = $this->getLineItem($product, rand(1, 5), $salesChannelContext);
+        foreach ($products as $i => $product) {
+            $qty = (isset($productsQuantity[$i])) ? $productsQuantity[$i] : rand(1, 5);
+            $lineItems[] = $this->getLineItem($product, $qty, $salesChannelContext);
         }
 
         try {

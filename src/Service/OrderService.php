@@ -214,14 +214,6 @@ class OrderService
 
     private function getSalesChannelContext(CustomerEntity $customer, string $salesChannelId): SalesChannelContext
     {
-        return $this->salesChannelContextFactory->create(
-            Uuid::randomHex(),
-            $salesChannelId,
-            [
-                SalesChannelContextService::CUSTOMER_ID => $customer->getId(),
-                SalesChannelContextService::BILLING_ADDRESS_ID => $customer->getDefaultBillingAddressId(),
-                SalesChannelContextService::SHIPPING_ADDRESS_ID => $customer->getDefaultShippingAddressId(),
-            ]
-        );
+        return $this->baseService->getSalesChannelContext($customer, $salesChannelId);
     }
 }

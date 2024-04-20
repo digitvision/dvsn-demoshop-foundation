@@ -11,6 +11,7 @@
 namespace Dvsn\DemoshopFoundation\Service;
 
 use Doctrine\DBAL\Connection;
+use Shopware\Core\Checkout\Customer\CustomerEntity;
 use Shopware\Core\Content\Category\CategoryEntity;
 use Shopware\Core\Content\Media\MediaEntity;
 use Shopware\Core\Content\Product\Aggregate\ProductMedia\ProductMediaEntity;
@@ -27,6 +28,8 @@ use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Sorting\FieldSorting;
 use Shopware\Core\Framework\Uuid\Uuid;
 use Shopware\Core\System\Language\LanguageEntity;
+use Shopware\Core\System\SalesChannel\Context\AbstractSalesChannelContextFactory;
+use Shopware\Core\System\SalesChannel\Context\SalesChannelContextService;
 use Shopware\Core\System\SalesChannel\Entity\SalesChannelRepository;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
 use Shopware\Core\System\SalesChannel\SalesChannelEntity;
@@ -36,7 +39,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class BaseService
 {
     public function __construct(
-        protected readonly ContainerInterface $container
+        private readonly ContainerInterface $container,
+        private readonly AbstractSalesChannelContextFactory $salesChannelContextFactory,
     ) {
     }
 
@@ -168,6 +172,35 @@ class BaseService
         )->getElements();
 
         return array_values($products);
+    }
+
+    public function getSalesChannelContext(?CustomerEntity $customer = null, ?string $salesChannelId = null): SalesChannelContext
+    {
+        /** @var EntityRepository $customerRepository */
+        $customerRepository = $this->container->get('customer.repository');
+
+        if (!$customer instanceof CustomerEntity) {
+            /** @var CustomerEntity $customer */
+            $customer = $customerRepository->search(
+                (new Criteria())
+                    ->addFilter(new EqualsFilter('email', 'max@mustermann.de')),
+                $this->getContext()
+            )->first();
+        }
+
+        if ($salesChannelId === null) {
+            $salesChannelId = $this->getDefaultSalesChannel()->getId();
+        }
+
+        return $this->salesChannelContextFactory->create(
+            Uuid::randomHex(),
+            $salesChannelId,
+            [
+                SalesChannelContextService::CUSTOMER_ID => $customer->getId(),
+                SalesChannelContextService::BILLING_ADDRESS_ID => $customer->getDefaultBillingAddressId(),
+                SalesChannelContextService::SHIPPING_ADDRESS_ID => $customer->getDefaultShippingAddressId(),
+            ]
+        );
     }
 
     public function createProductStreamAllProducts(): ProductStreamEntity

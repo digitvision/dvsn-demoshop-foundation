@@ -5,6 +5,7 @@
     <services>
         <service id="Dvsn\DemoshopFoundation\Service\BaseService" public="true">
             <argument type="service" id="service_container"/>
+            <argument type="service" id="Shopware\Core\System\SalesChannel\Context\SalesChannelContextFactory" />
         </service>
 
         <service id="Dvsn\DemoshopFoundation\Service\VariantService" public="true">

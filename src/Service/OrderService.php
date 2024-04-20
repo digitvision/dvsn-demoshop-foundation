@@ -20,6 +20,7 @@ use Shopware\Core\Checkout\Cart\Price\Struct\QuantityPriceDefinition;
 use Shopware\Core\Checkout\Cart\SalesChannel\AbstractCartOrderRoute;
 use Shopware\Core\Checkout\Cart\SalesChannel\CartService;
 use Shopware\Core\Checkout\Customer\CustomerEntity;
+use Shopware\Core\Checkout\Order\OrderEntity;
 use Shopware\Core\Content\Product\SalesChannel\SalesChannelProductEntity;
 use Shopware\Core\Defaults;
 use Shopware\Core\Framework\Context;
@@ -46,7 +47,7 @@ class OrderService
     ) {
     }
 
-    public function createRandomOrder(?int $productQuantity = null, ?string $customerId = null, ?string $salesChannelId = null): ?string
+    public function createRandomOrder(?int $productQuantity = null, ?string $customerId = null, ?string $salesChannelId = null): ?OrderEntity
     {
         $context = Context::createDefaultContext();
 
@@ -121,9 +122,7 @@ class OrderService
             return null;
         }
 
-        $order = $response->getOrder();
-
-        return $order->getOrderNumber();
+        return $response->getOrder();
     }
 
     private function getLineItem(SalesChannelProductEntity $product, int $quantity, SalesChannelContext $salesChannelContext): LineItem

@@ -11,6 +11,7 @@
 namespace Dvsn\DemoshopFoundation\Storefront\Controller;
 
 use Dvsn\DemoshopFoundation\Service\BaseService;
+use Dvsn\DemoshopFoundation\Service\OrderService;
 use Dvsn\DemoshopFoundation\Service\VariantService;
 use Shopware\Core\Checkout\Customer\Aggregate\CustomerGroup\CustomerGroupEntity;
 use Shopware\Core\Defaults;
@@ -31,6 +32,19 @@ use Symfony\Component\HttpFoundation\Request;
 #[Route(defaults: ['_routeScope' => ['storefront']])]
 class TestController extends StorefrontController
 {
+    #[Route(path: '/dvsn/demoshop-foundation/test/create-order', name: 'dvsn.demoshop-foundation.test.create-order', options: ['seo' => true], defaults: ['_httpCache' => false], methods: ['GET'])]
+    public function createOrder(Request $request, RequestDataBag $data, Context $context, SalesChannelContext $salesChannelContext): void
+    {
+        dd('disabled');
+
+        /** @var OrderService $orderService */
+        $orderService = $this->container->get('Dvsn\DemoshopFoundation\Service\OrderService');
+
+        $number = $orderService->createRandomOrder();
+
+        dd($number);
+    }
+
     #[Route(path: '/dvsn/demoshop-foundation/test/create-home-element-alert', name: 'dvsn.demoshop-foundation.test.create-home-element-alert', options: ['seo' => true], defaults: ['_httpCache' => false], methods: ['GET'])]
     public function createHomeElementAlert(Request $request, RequestDataBag $data, Context $context, SalesChannelContext $salesChannelContext): void
     {

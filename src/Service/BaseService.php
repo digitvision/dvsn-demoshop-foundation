@@ -15,16 +15,20 @@ use Shopware\Core\Content\Category\CategoryEntity;
 use Shopware\Core\Content\Media\MediaEntity;
 use Shopware\Core\Content\Product\Aggregate\ProductMedia\ProductMediaEntity;
 use Shopware\Core\Content\Product\ProductEntity;
+use Shopware\Core\Content\Product\SalesChannel\SalesChannelProductEntity;
 use Shopware\Core\Content\ProductStream\ProductStreamEntity;
 use Shopware\Core\Content\Rule\RuleEntity;
 use Shopware\Core\Defaults;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
+use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsAnyFilter;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Sorting\FieldSorting;
 use Shopware\Core\Framework\Uuid\Uuid;
 use Shopware\Core\System\Language\LanguageEntity;
+use Shopware\Core\System\SalesChannel\Entity\SalesChannelRepository;
+use Shopware\Core\System\SalesChannel\SalesChannelContext;
 use Shopware\Core\System\SalesChannel\SalesChannelEntity;
 use Shopware\Core\System\Tax\TaxEntity;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -137,6 +141,34 @@ class BaseService
 
         return $productMedia->getMedia();
     }
+
+    public function getRandomProducts(int $quantity, SalesChannelContext $salesChannelContext): array
+    {
+        /** @var Connection $connection */
+        $connection = $this->container->get('Doctrine\DBAL\Connection');
+
+        /** @var SalesChannelRepository $salesChannelProductRepository */
+        $salesChannelProductRepository = $this->container->get('sales_channel.product.repository');
+
+        $query = '
+            SELECT LOWER(HEX(id))
+            FROM product
+            ORDER BY RAND()
+            LIMIT ' . $quantity . '
+        ';
+        $ids = $connection->fetchFirstColumn($query);
+
+        /** @var SalesChannelProductEntity[] $products */
+        $products = $salesChannelProductRepository->search(
+            (new Criteria())
+                ->addFilter(new EqualsAnyFilter('id', $ids))
+                ->addAssociations(['cover.media', 'options.group', 'categories', 'properties.group', 'media']),
+            $salesChannelContext
+        )->getElements();
+
+        return array_values($products);
+    }
+
 
     public function createProductStreamAllProducts(): ProductStreamEntity
     {

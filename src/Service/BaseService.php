@@ -13,6 +13,7 @@ namespace Dvsn\DemoshopFoundation\Service;
 use Doctrine\DBAL\Connection;
 use Shopware\Core\Checkout\Customer\Aggregate\CustomerGroup\CustomerGroupEntity;
 use Shopware\Core\Checkout\Customer\CustomerEntity;
+use Shopware\Core\Checkout\Promotion\PromotionEntity;
 use Shopware\Core\Content\Category\CategoryEntity;
 use Shopware\Core\Content\Media\MediaEntity;
 use Shopware\Core\Content\Product\Aggregate\ProductMedia\ProductMediaEntity;
@@ -204,6 +205,63 @@ class BaseService
                 SalesChannelContextService::SHIPPING_ADDRESS_ID => $customer->getDefaultShippingAddressId(),
             ]
         );
+    }
+
+    public function createPromotion(string $name, string $code, string $type = 'percentage', float $value = 10.0): PromotionEntity
+    {
+        /** @var EntityRepository $promotionRepository */
+        $promotionRepository = $this->container->get('promotion.repository');
+
+        $id = Uuid::randomHex();
+
+        $data = [
+            'id' => $id,
+            'active' => true,
+            'maxRedemptionsGlobal' => 999,
+            'maxRedemptionsPerCustomer' => 999,
+            'code' => $code,
+            'useCodes' => true,
+            'customerRestriction' => false,
+            'discounts' => [[
+                'id' => Uuid::randomHex(),
+                'promotionId' => $id,
+                'scope' => 'cart',
+                'type' => 'percentage',
+                'value' => $value,
+                'considerAdvancedRules' => false,
+                'sorterKey' => 'PRICE_ASC',
+                'applierKey' => 'ALL',
+                'usageKey' => 'ALL',
+                'discountRules' => []
+            ]],
+            'translations' => [
+                Defaults::LANGUAGE_SYSTEM => [
+                    'name' => $name
+                ]
+            ],
+            'salesChannels' => [[
+                'id' => Uuid::randomHex(),
+                'priority' => 1,
+                'promotionId' => $id,
+                'salesChannelId' => $this->getDefaultSalesChannel()->getId()
+            ]],
+            'cartRules' => [],
+            'personaRules' => [],
+            'preventCombination' => true
+        ];
+
+        $promotionRepository->create(
+            [$data],
+            $this->getContext()
+        );
+
+        /** @var PromotionEntity $promotion */
+        $promotion = $promotionRepository->search(
+            new Criteria([$id]),
+            $this->getContext()
+        )->first();
+
+        return $promotion;
     }
 
     public function createProductStreamAllProducts(): ProductStreamEntity

@@ -47,7 +47,7 @@ class OrderService
     ) {
     }
 
-    public function createRandomOrder(?int $productQuantity = null, array $productsQuantity = [], ?string $customerId = null, ?string $salesChannelId = null): ?OrderEntity
+    public function createRandomOrder(?int $productQuantity = null, ?array $productsQuantity = null, ?string $customerId = null, ?string $salesChannelId = null): ?OrderEntity
     {
         $context = Context::createDefaultContext();
 

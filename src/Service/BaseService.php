@@ -11,6 +11,7 @@
 namespace Dvsn\DemoshopFoundation\Service;
 
 use Doctrine\DBAL\Connection;
+use Shopware\Core\Checkout\Customer\Aggregate\CustomerGroup\CustomerGroupEntity;
 use Shopware\Core\Checkout\Customer\CustomerEntity;
 use Shopware\Core\Content\Category\CategoryEntity;
 use Shopware\Core\Content\Media\MediaEntity;
@@ -27,12 +28,14 @@ use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsAnyFilter;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Sorting\FieldSorting;
 use Shopware\Core\Framework\Uuid\Uuid;
+use Shopware\Core\System\Country\CountryEntity;
 use Shopware\Core\System\Language\LanguageEntity;
 use Shopware\Core\System\SalesChannel\Context\AbstractSalesChannelContextFactory;
 use Shopware\Core\System\SalesChannel\Context\SalesChannelContextService;
 use Shopware\Core\System\SalesChannel\Entity\SalesChannelRepository;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
 use Shopware\Core\System\SalesChannel\SalesChannelEntity;
+use Shopware\Core\System\Salutation\SalutationEntity;
 use Shopware\Core\System\Tax\TaxEntity;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -590,5 +593,118 @@ class BaseService
         }
 
         return $value;
+    }
+
+    public function createCustomer(): CustomerEntity
+    {
+        $firstNames = [
+            'mr' => ['Wolfgang', 'Michael', 'Werner', 'Klaus', 'Thomas', 'Jürgen', 'Andreas', 'Dieter', 'Frank', 'Bernd', 'Uwe'],
+            'mrs' => ['Maria', 'Monika', 'Petra', 'Helga', 'Brigitte', 'Andrea', 'Claudia', 'Anna', 'Heike', 'Ulrike', 'Kerstin']
+        ];
+
+        $lastNames = ['Müller', 'Schmidt', 'Schneider', 'Fischer', 'Weber', 'Meyer', 'Wagner', 'Becker', 'Schulz', 'Hoffmann'];
+
+        $cities = ['Berlin', 'Hamburg', 'München', 'Köln', 'Frankfurt', 'Stuttgart', 'Düsseldorf', 'Leipzig', 'Dortmund', 'Essen', 'Bremen', 'Hannover'];
+
+        $streets = ['Hauptstraße', 'Schulstraße', 'Gartenstraße', 'Dorfstraße', 'Bahnhofstraße', 'Bergstraße', 'Birkenweg', 'Lindenstraße', 'Kirchstraße', 'Waldstraße'];
+
+        $salutationKeys = ['mr', 'mrs'];
+
+        /** @var EntityRepository $customerRepository */
+        $customerRepository = $this->container->get('customer.repository');
+
+        /** @var EntityRepository $customerGroupRepository */
+        $customerGroupRepository = $this->container->get('customer_group.repository');
+
+        /** @var EntityRepository $salutationRepository */
+        $salutationRepository = $this->container->get('salutation.repository');
+
+        /** @var EntityRepository $salutationRepository */
+        $countryRepository = $this->container->get('country.repository');
+
+        $languages = $this->getLanguages();
+
+        /** @var CustomerGroupEntity $customerGroup */
+        $customerGroup = $customerGroupRepository->search(
+            (new Criteria())->setLimit(1),
+            Context::createDefaultContext()
+        )->first();
+
+        /** @var SalesChannelEntity $salesChannel */
+        $salesChannel = $this->getDefaultSalesChannel();
+
+        /** @var SalutationEntity $salutation */
+        $salutation = $salutationRepository->search(
+            (new Criteria())->addFilter(new EqualsFilter('salutationKey', $salutationKeys[array_rand($salutationKeys)]))->setLimit(1),
+            Context::createDefaultContext()
+        )->first();
+
+        /** @var CountryEntity $country */
+        $country = $countryRepository->search(
+            (new Criteria())->addFilter(new EqualsFilter('iso', 'DE'))->setLimit(1),
+            Context::createDefaultContext()
+        )->first();
+
+        $firstName = $firstNames[$salutation->getSalutationKey()][array_rand($firstNames[$salutation->getSalutationKey()])];
+        $lastName = $lastNames[array_rand($lastNames)];
+        $city = $cities[array_rand($cities)];
+        $street = $streets[array_rand($streets)];
+
+        $customer = [
+            'id' => Uuid::randomHex(),
+            'customerNumber' => (string) rand(10000, 20000),
+            'salesChannelId' => $salesChannel->getId(),
+            'boundSalesChannelId' => null,
+            'languageId' => $languages['de'],
+            'groupId' => $customerGroup->getId(),
+            'requestedGroupId' => null,
+            'defaultPaymentMethodId' => $salesChannel->getPaymentMethodId(),
+            'salutationId' => $salutation->getId(),
+            'firstName' => $firstName,
+            'lastName' => $lastName,
+            'email' => substr(md5(microtime()), 16) . '@mustermann.de',
+            'password' => md5(microtime()),
+            'title' => null,
+            'affiliateCode' => null,
+            'campaignCode' => null,
+            'active' => true,
+            'birthday' => null,
+            'guest' => false,
+            'accountType' => 'private',
+            'firstLogin' => new \DateTimeImmutable(),
+            'addresses' => [],
+            'customFields' => []
+        ];
+
+        $address = [
+            'id' => Uuid::randomHex(),
+            'salutationId' => $salutation->getId(),
+            'firstName' => $firstName,
+            'lastName' => $lastName,
+            'street' => $street . ' ' . (string) rand(5, 150),
+            'zipcode' => (string) rand(10000, 95000),
+            'city' => $city,
+            'countryId' => $country->getId(),
+            'countryStateId' => null
+        ];
+
+        $address['customerId'] = $customer['id'];
+
+        $customer['defaultShippingAddressId'] = $address['id'];
+        $customer['defaultBillingAddressId'] = $address['id'];
+        $customer['addresses'][] = $address;
+
+        $customerRepository->create(
+            [$customer],
+            Context::createDefaultContext()
+        );
+
+        /** @var CustomerEntity $entity */
+        $entity = $customerRepository->search(
+            (new Criteria())->addFilter(new EqualsFilter('id', $customer['id'])),
+            $this->getContext()
+        )->first();
+
+        return $entity;
     }
 }

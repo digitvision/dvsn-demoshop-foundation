@@ -378,7 +378,6 @@ class Install
         $customer['defaultBillingAddressId'] = $address['id'];
         $customer['addresses'][] = $address;
 
-
         $customerRepository->create(
             [$customer],
             Context::createDefaultContext()

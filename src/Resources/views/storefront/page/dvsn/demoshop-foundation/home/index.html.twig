@@ -16,7 +16,7 @@
 
                         {% if element.type == 'content' %}
                             <div class="{{ element.payload.cls }}">
-                                {{ element.translated.translatablePayload.content|raw }}
+                                {{ element.translated.translatablePayload.content|replace({'--timestamp--': 'now'|date('U')})|raw }}
                             </div>
                         {% endif %}
 

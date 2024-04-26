@@ -25,6 +25,23 @@ use Symfony\Component\HttpFoundation\Request;
 #[Route(defaults: ['_routeScope' => ['storefront']])]
 class TestController extends StorefrontController
 {
+    #[Route(path: '/dvsn/demoshop-foundation/test/create-content-with-timestamp', name: 'dvsn.demoshop-foundation.test.create-content-with-timestamp', options: ['seo' => true], defaults: ['_httpCache' => false], methods: ['GET'])]
+    public function createContentWithTimestamp(Request $request, RequestDataBag $data, Context $context, SalesChannelContext $salesChannelContext): void
+    {
+        dd('disabled');
+
+        /** @var BaseService $baseService */
+        $baseService = $this->container->get('Dvsn\DemoshopFoundation\Service\BaseService');
+
+        $baseService->createHomeElementContent(
+            '<div>hallo --timestamp-- das ist ein test</div>',
+            '<div>hallo --timestamp-- das ist ein test</div>',
+            10
+        );
+
+        dd('ende');
+    }
+
     #[Route(path: '/dvsn/demoshop-foundation/test/create-customer', name: 'dvsn.demoshop-foundation.test.create-customer', options: ['seo' => true], defaults: ['_httpCache' => false], methods: ['GET'])]
     public function createCustomer(Request $request, RequestDataBag $data, Context $context, SalesChannelContext $salesChannelContext): void
     {

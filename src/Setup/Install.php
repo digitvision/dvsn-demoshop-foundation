@@ -297,9 +297,6 @@ class Install
         /** @var EntityRepository $customerRepository */
         $customerRepository = $this->container->get('customer.repository');
 
-        /** @var EntityRepository $flowRepository */
-        $flowRepository = $this->container->get('flow.repository');
-
         /** @var EntityRepository $customerGroupRepository */
         $customerGroupRepository = $this->container->get('customer_group.repository');
 
@@ -311,18 +308,6 @@ class Install
 
         /** @var EntityRepository $salutationRepository */
         $countryRepository = $this->container->get('country.repository');
-
-        /** @var FlowEntity $flow */
-        $flow = $flowRepository->search(
-            (new Criteria())
-                ->addFilter(new EqualsFilter('eventName', 'checkout.customer.register')),
-            Context::createDefaultContext()
-        )->first();
-
-        $flowRepository->delete(
-            [['id' => $flow->getId()]],
-            Context::createDefaultContext()
-        );
 
         $languages = $this->getLanguages();
 

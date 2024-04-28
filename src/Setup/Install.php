@@ -56,7 +56,7 @@ class Install
         /** @var \Shopware\Core\System\SystemConfig\SystemConfigService $systemConfigService */
         $systemConfigService = $this->container->get('Shopware\Core\System\SystemConfig\SystemConfigService');
 
-        $systemConfigService->set(MailSender::DISABLE_MAIL_DELIVERY, true);
+        $systemConfigService->set('core.mailerSettings.disableDelivery', true);
     }
 
     private function installCategories(): void

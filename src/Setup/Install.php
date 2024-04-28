@@ -48,7 +48,7 @@ class Install
         $this->installCategories();
         $this->installSalesChannel();
         $this->updateAdminUser();
-        $this->installMaxMustermann();
+        // $this->installMaxMustermann();
     }
 
     private function disableMailDelivery(): void

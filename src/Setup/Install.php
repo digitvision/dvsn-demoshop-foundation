@@ -44,10 +44,19 @@ class Install
 
     public function install(): void
     {
+        $this->disableMailDelivery();
         $this->installCategories();
         $this->installSalesChannel();
         $this->updateAdminUser();
         $this->installMaxMustermann();
+    }
+
+    private function disableMailDelivery(): void
+    {
+        /** @var \Shopware\Core\System\SystemConfig\SystemConfigService $systemConfigService */
+        $systemConfigService = $this->container->get('Shopware\Core\System\SystemConfig\SystemConfigService');
+
+        $systemConfigService->set(MailSender::DISABLE_MAIL_DELIVERY, true);
     }
 
     private function installCategories(): void
@@ -295,10 +304,23 @@ class Install
 
     private function installMaxMustermann(): void
     {
-        /** @var \Shopware\Core\System\SystemConfig\SystemConfigService $systemConfigService */
-        $systemConfigService = $this->container->get('Shopware\Core\System\SystemConfig\SystemConfigService');
+        /** @var EntityRepository $flowRepository */
+        $flowRepository = $this->container->get('flow.repository');
 
-        $systemConfigService->set(MailSender::DISABLE_MAIL_DELIVERY, true);
+        /** @var FlowEntity $flow */
+        $flow = $flowRepository->search(
+            (new Criteria())
+                ->addFilter(new EqualsFilter('event_name', 'checkout.customer.register')),
+            Context::createDefaultContext()
+        )->first();
+
+        $flowRepository->delete(
+            [['id' => $flow->getId()]],
+            Context::createDefaultContext()
+        );
+
+        return;
+
 
         /** @var EntityRepository $customerRepository */
         $customerRepository = $this->container->get('customer.repository');

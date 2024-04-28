@@ -386,7 +386,7 @@ class BaseService
         return $category;
     }
 
-    public function createProduct(string $deName, string $enName, string $number, float $netPrice, float $grossPrice, CategoryEntity $category, ?ProductMediaEntity $productMedia = null, ?SalesChannelEntity $salesChannel = null, ?TaxEntity $tax = null): ProductEntity
+    public function createProduct(string $deName, string $enName, string $number, float $netPrice, float $grossPrice, CategoryEntity $category, ?ProductMediaEntity $productMedia = null, ?SalesChannelEntity $salesChannel = null, ?TaxEntity $tax = null, ?int $visibility = null): ProductEntity
     {
         /** @var EntityRepository $productMediaRepository */
         $productMediaRepository = $this->container->get('product_media.repository');
@@ -418,6 +418,10 @@ class BaseService
 
         if ($tax === null) {
             $tax = $this->getDefaultTax();
+        }
+
+        if ($visibility === null) {
+            $visibility = 30;
         }
 
         $id = Uuid::randomHex();
@@ -455,7 +459,7 @@ class BaseService
                 'id' => Uuid::randomHex(),
                 'productId' => $id,
                 'salesChannelId' => $salesChannel->getId(),
-                'visibility' => 30
+                'visibility' => $visibility
             ]],
             'categories' => [[
                 'id' => $category->getId()

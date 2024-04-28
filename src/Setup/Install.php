@@ -14,6 +14,7 @@ use Doctrine\DBAL\Connection;
 use Shopware\Core\Checkout\Customer\Aggregate\CustomerGroup\CustomerGroupEntity;
 use Shopware\Core\Content\Category\CategoryEntity;
 use Shopware\Core\Content\Flow\FlowEntity;
+use Shopware\Core\Content\Mail\Service\MailSender;
 use Shopware\Core\Defaults;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
@@ -294,6 +295,11 @@ class Install
 
     private function installMaxMustermann(): void
     {
+        /** @var \Shopware\Core\System\SystemConfig\SystemConfigService $systemConfigService */
+        $systemConfigService = $this->container->get('Shopware\Core\System\SystemConfig\SystemConfigService');
+
+        $systemConfigService->set(MailSender::DISABLE_MAIL_DELIVERY, true);
+
         /** @var EntityRepository $customerRepository */
         $customerRepository = $this->container->get('customer.repository');
 

@@ -13,6 +13,7 @@ namespace Dvsn\DemoshopFoundation\Setup;
 use Doctrine\DBAL\Connection;
 use Shopware\Core\Checkout\Customer\Aggregate\CustomerGroup\CustomerGroupEntity;
 use Shopware\Core\Content\Category\CategoryEntity;
+use Shopware\Core\Content\Flow\FlowEntity;
 use Shopware\Core\Defaults;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
@@ -296,6 +297,9 @@ class Install
         /** @var EntityRepository $customerRepository */
         $customerRepository = $this->container->get('customer.repository');
 
+        /** @var EntityRepository $flowRepository */
+        $flowRepository = $this->container->get('flow.repository');
+
         /** @var EntityRepository $customerGroupRepository */
         $customerGroupRepository = $this->container->get('customer_group.repository');
 
@@ -307,6 +311,18 @@ class Install
 
         /** @var EntityRepository $salutationRepository */
         $countryRepository = $this->container->get('country.repository');
+
+        /** @var FlowEntity $flow */
+        $flow = $flowRepository->search(
+            (new Criteria())
+                ->addFilter(new EqualsFilter('event_name', 'checkout.customer.register')),
+            Context::createDefaultContext()
+        )->first();
+
+        $flowRepository->delete(
+            [['id' => $flow->getId()]],
+            Context::createDefaultContext()
+        );
 
         $languages = $this->getLanguages();
 

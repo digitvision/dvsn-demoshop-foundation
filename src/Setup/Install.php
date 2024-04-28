@@ -315,7 +315,7 @@ class Install
         /** @var FlowEntity $flow */
         $flow = $flowRepository->search(
             (new Criteria())
-                ->addFilter(new EqualsFilter('event_name', 'checkout.customer.register')),
+                ->addFilter(new EqualsFilter('eventName', 'checkout.customer.register')),
             Context::createDefaultContext()
         )->first();
 

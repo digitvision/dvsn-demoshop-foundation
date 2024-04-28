@@ -304,27 +304,13 @@ class Install
 
     private function installMaxMustermann(): void
     {
-        /** @var EntityRepository $flowRepository */
-        $flowRepository = $this->container->get('flow.repository');
-
-        /** @var FlowEntity $flow */
-        $flow = $flowRepository->search(
-            (new Criteria())
-                ->addFilter(new EqualsFilter('eventName', 'checkout.customer.register')),
-            Context::createDefaultContext()
-        )->first();
-
-        if (!$flow instanceof FlowEntity) {
-            return;
-        }
-
-        $flowRepository->delete(
-            [['id' => $flow->getId()]],
-            Context::createDefaultContext()
+        $query = '
+            UPDATE flow
+            SET active = 0
+        ';
+        $this->connection->executeStatement(
+            $query
         );
-
-        return;
-
 
         /** @var EntityRepository $customerRepository */
         $customerRepository = $this->container->get('customer.repository');
@@ -417,5 +403,13 @@ class Install
                 Context::createDefaultContext()
             );
         } catch (\Exception $exception) {}
+
+        $query = '
+            UPDATE flow
+            SET active = 1
+        ';
+        $this->connection->executeStatement(
+            $query
+        );
     }
 }

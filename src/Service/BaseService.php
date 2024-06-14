@@ -150,6 +150,27 @@ class BaseService
         return $productMedia->getMedia();
     }
 
+    public function getRandomRule(): RuleEntity
+    {
+        /** @var EntityRepository $ruleRepository */
+        $ruleRepository = $this->container->get('rule.repository');
+
+        /** @var RuleEntity[] $rules */
+        $rules = $ruleRepository->search(
+            (new Criteria()),
+            $this->getContext()
+        )->getElements();
+
+        $rules = array_values($rules);
+
+        srand();
+        $index = rand(0, count($rules) - 1);
+
+        $rule = $rules[$index];
+
+        return $rule;
+    }
+
     public function getRandomProducts(int $quantity, SalesChannelContext $salesChannelContext): array
     {
         /** @var Connection $connection */

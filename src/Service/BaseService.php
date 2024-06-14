@@ -719,7 +719,8 @@ class BaseService
         $boundSalesChannelId = null;
 
         if ($salesChannel === null) {
-            $salesChannelId = $this->getDefaultSalesChannel()->getId();
+            $salesChannel = $this->getDefaultSalesChannel();
+            $salesChannelId = $salesChannel->getId();
         } else {
             $salesChannelId = $salesChannel->getId();
             $boundSalesChannelId = $salesChannel->getId();
@@ -755,7 +756,7 @@ class BaseService
             'salutationId' => $salutation->getId(),
             'firstName' => $firstName,
             'lastName' => $lastName,
-            'email' => str_replace(['ä', 'ö', 'ü', 'ß'], ['ae', 'ou', 'ue', 'ss'], strtolower($firstName) . '.' . strtolower($lastName) . '-' . substr(md5(microtime()), 8) . '@' . $emailProvider),
+            'email' => str_replace(['ä', 'ö', 'ü', 'ß'], ['ae', 'ou', 'ue', 'ss'], strtolower($firstName) . '.' . strtolower($lastName) . '-' . substr(md5(microtime()), 0, 8) . '@' . $emailProvider),
             'password' => md5(microtime()),
             'title' => null,
             'affiliateCode' => null,

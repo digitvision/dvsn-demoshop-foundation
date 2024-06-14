@@ -790,4 +790,96 @@ class BaseService
 
         return $entity;
     }
+
+    public function createSalesChannel(string $name, string $url): SalesChannelEntity
+    {
+        $context = $this->getContext();
+        $defaultSalesChannel = $this->getDefaultSalesChannel();
+        $languages = $this->getLanguages();
+
+        /** @var Connection $connection */
+        $connection = $this->container->get('Doctrine\DBAL\Connection');
+
+        /** @var EntityRepository $countryRepository */
+        $countryRepository = $this->container->get('country.repository');
+
+        /** @var EntityRepository $salesChannelRepository */
+        $salesChannelRepository = $this->container->get('sales_channel.repository');
+
+        /** @var EntityRepository $shippingMethodRepository */
+        $shippingMethodRepository = $this->container->get('shipping_method.repository');
+
+        /** @var EntityRepository $paymentMethodRepository */
+        $paymentMethodRepository = $this->container->get('payment_method.repository');
+
+        /** @var \Shopware\Core\System\Country\CountryEntity $countyDE */
+        $countyDE = $countryRepository->search((new Criteria())->addFilter(new EqualsFilter('iso', 'DE')), $context)->first();
+
+        /** @var \Shopware\Core\Checkout\Payment\PaymentMethodEntity[] $paymentMethods */
+        $paymentMethods = array_values($paymentMethodRepository->search((new Criteria())->addFilter(new EqualsFilter('active', true))->addSorting(new FieldSorting('position', 'ASC')), $context)->getElements());
+
+        /** @var \Shopware\Core\Checkout\Shipping\ShippingMethodEntity[] $shippingMethods */
+        $shippingMethods = array_values($shippingMethodRepository->search((new Criteria())->addFilter(new EqualsFilter('active', true))->addSorting(new FieldSorting('position', 'ASC')), $context)->getElements());
+
+        $paymentMethodIds = [];
+        $shippingMethodIds = [];
+
+        foreach ($paymentMethods as $paymentMethod) {
+            $paymentMethodIds[] = ['id' => $paymentMethod->getId()];
+        }
+
+        foreach ($shippingMethods as $shippingMethod) {
+            $shippingMethodIds[] = ['id' => $shippingMethod->getId()];
+        }
+
+        $salesChannelArr = [
+            'id' => Uuid::randomHex(),
+            'accessKey' => strtoupper(md5(microtime())),
+            'active' => true,
+            'countries' => [['id' => $countyDE->getId()]],
+            'countryId' => $countyDE->getId(),
+            'currencies' => [['id' => Defaults::CURRENCY]],
+            'currencyId' => Defaults::CURRENCY,
+            'customerGroupId' => $defaultSalesChannel->getCustomerGroupId(),
+            'domains' => [[
+                'id' => Uuid::randomHex(),
+                'currencyId' => Defaults::CURRENCY,
+                'hreflangUseOnlyLocale' => false,
+                'languageId' => $languages['de'],
+                'snippetSetId' => $defaultSalesChannel->getDomains()->first()->getSnippetSetId(),
+                'url' => $url
+            ]],
+            'languageId' => $languages['de'],
+            'languages' => [['id' => $languages['de']]],
+            'name' => $name,
+            'navigationCategoryId' => $defaultSalesChannel->getNavigationCategoryId(),
+            'paymentMethodId' => $paymentMethods[0]->getId(),
+            'paymentMethods' => $paymentMethodIds,
+            'shippingMethodId' => $shippingMethods[0]->getId(),
+            'shippingMethods' => $shippingMethodIds,
+            'taxCalculationType' => $defaultSalesChannel->getTaxCalculationType(),
+            'typeId' => $defaultSalesChannel->getTypeId()
+        ];
+
+        $salesChannelRepository->create([$salesChannelArr], $context);
+
+        /** @var SalesChannelEntity $salesChannel */
+        $salesChannel = $salesChannelRepository->search(new Criteria([$salesChannelArr['id']]), $context)->first();
+
+        $query = '
+            INSERT INTO product_visibility
+                SELECT
+                    UNHEX(MD5(HEX(id))) AS id,
+                    product_id,
+                    product_version_id,
+                    0x' . $salesChannel->getId() . ' AS sales_channel_id,
+                    visibility,
+                    NOW() AS created_at,
+                    NULL AS updated_at
+                WHERE sales_channel_id = 0x' . $defaultSalesChannel->getId() . '
+        ';
+        $connection->executeStatement($query);
+
+        return $salesChannel;
+    }
 }

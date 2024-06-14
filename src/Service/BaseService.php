@@ -678,7 +678,7 @@ class BaseService
         return $value;
     }
 
-    public function createCustomer(): CustomerEntity
+    public function createCustomer(?SalesChannelEntity $salesChannel = null): CustomerEntity
     {
         $firstNames = [
             'mr' => ['Wolfgang', 'Michael', 'Werner', 'Klaus', 'Thomas', 'Jürgen', 'Andreas', 'Dieter', 'Frank', 'Bernd', 'Uwe'],
@@ -713,8 +713,15 @@ class BaseService
             Context::createDefaultContext()
         )->first();
 
-        /** @var SalesChannelEntity $salesChannel */
-        $salesChannel = $this->getDefaultSalesChannel();
+        $salesChannelId = null;
+        $boundSalesChannelId = null;
+
+        if ($salesChannel === null) {
+            $salesChannelId = $this->getDefaultSalesChannel()->getId();
+        } else {
+            $salesChannelId = $salesChannel->getId();
+            $boundSalesChannelId = $salesChannel->getId();
+        }
 
         /** @var SalutationEntity $salutation */
         $salutation = $salutationRepository->search(
@@ -736,8 +743,8 @@ class BaseService
         $customer = [
             'id' => Uuid::randomHex(),
             'customerNumber' => (string) rand(10000, 20000),
-            'salesChannelId' => $salesChannel->getId(),
-            'boundSalesChannelId' => null,
+            'salesChannelId' => $salesChannelId,
+            'boundSalesChannelId' => $boundSalesChannelId,
             'languageId' => $languages['de'],
             'groupId' => $customerGroup->getId(),
             'requestedGroupId' => null,

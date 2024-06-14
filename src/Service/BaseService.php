@@ -876,6 +876,7 @@ class BaseService
                     visibility,
                     NOW() AS created_at,
                     NULL AS updated_at
+                FROM product_visibility
                 WHERE sales_channel_id = 0x' . $defaultSalesChannel->getId() . '
         ';
         $connection->executeStatement($query);

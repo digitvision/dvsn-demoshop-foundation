@@ -755,7 +755,7 @@ class BaseService
             'salutationId' => $salutation->getId(),
             'firstName' => $firstName,
             'lastName' => $lastName,
-            'email' => strtolower($firstName) . '.' . strtolower($lastName) . '-' . substr(md5(microtime()), 8) . '@' . $emailProvider,
+            'email' => str_replace(['ä', 'ö', 'ü', 'ß'], ['ae', 'ou', 'ue', 'ss'], strtolower($firstName) . '.' . strtolower($lastName) . '-' . substr(md5(microtime()), 8) . '@' . $emailProvider),
             'password' => md5(microtime()),
             'title' => null,
             'affiliateCode' => null,

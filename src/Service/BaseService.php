@@ -693,6 +693,8 @@ class BaseService
 
         $salutationKeys = ['mr', 'mrs'];
 
+        $emailProviders = ['gmx.de', 'gmail.com', 'mail.de', 'web.de', 'telekom.de', 'freenet.de', 'yahoo.com', 'outlook.com'];
+
         /** @var EntityRepository $customerRepository */
         $customerRepository = $this->container->get('customer.repository');
 
@@ -739,6 +741,7 @@ class BaseService
         $lastName = $lastNames[array_rand($lastNames)];
         $city = $cities[array_rand($cities)];
         $street = $streets[array_rand($streets)];
+        $emailProvider = $emailProviders[array_rand($emailProviders)];
 
         $customer = [
             'id' => Uuid::randomHex(),
@@ -752,7 +755,7 @@ class BaseService
             'salutationId' => $salutation->getId(),
             'firstName' => $firstName,
             'lastName' => $lastName,
-            'email' => substr(md5(microtime()), 16) . '@mustermann.de',
+            'email' => strtolower($firstName) . '.' . strtolower($lastName) . '-' . substr(md5(microtime()), 8) . '@' . $emailProvider,
             'password' => md5(microtime()),
             'title' => null,
             'affiliateCode' => null,

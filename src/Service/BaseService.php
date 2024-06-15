@@ -217,6 +217,15 @@ class BaseService
             $salesChannelId = $this->getDefaultSalesChannel()->getId();
         }
 
+        /** @var EntityRepository $salesChannelRepository */
+        $salesChannelRepository = $this->container->get('sales_channel.repository');
+
+        /** @var SalesChannelEntity $salesChannel */
+        $salesChannel = $salesChannelRepository->search(
+            (new Criteria())->addAssociations(['domains'])->addFilter(new EqualsFilter('id', $salesChannelId))->setLimit(1),
+            $this->getContext()
+        )->first();
+
         return $this->salesChannelContextFactory->create(
             Uuid::randomHex(),
             $salesChannelId,
@@ -224,6 +233,7 @@ class BaseService
                 SalesChannelContextService::CUSTOMER_ID => $customer->getId(),
                 SalesChannelContextService::BILLING_ADDRESS_ID => $customer->getDefaultBillingAddressId(),
                 SalesChannelContextService::SHIPPING_ADDRESS_ID => $customer->getDefaultShippingAddressId(),
+                SalesChannelContextService::DOMAIN_ID => $salesChannel->getDomains()->first()->getId()
             ]
         );
     }

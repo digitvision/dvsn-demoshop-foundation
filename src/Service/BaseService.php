@@ -222,7 +222,7 @@ class BaseService
 
         /** @var SalesChannelEntity $salesChannel */
         $salesChannel = $salesChannelRepository->search(
-            (new Criteria())->addAssociations(['domains'])->addFilter(new EqualsFilter('id', $salesChannelId))->getAssociation('domains')->addSorting(new FieldSorting('url'))->setLimit(1),
+            (new Criteria())->addAssociations(['domains'])->addFilter(new EqualsFilter('id', $salesChannelId))->addSorting(new FieldSorting('domains.url'))->setLimit(1),
             $this->getContext()
         )->first();
 

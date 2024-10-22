@@ -6,6 +6,8 @@
  * @copyright (c) 2024 digitvision
  */
 
-import './module/sw-dashboard';
-import './module/sw-extension';
-import './module/sw-settings';
+.sw-page.sw-dashboard-index {
+    .sw-usage-data-consent-banner {
+        display: none;
+    }
+}

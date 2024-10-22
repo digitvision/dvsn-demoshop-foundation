@@ -8,3 +8,4 @@
 
 import './component/sw-extension-card-base';
 import './page/sw-extension-my-extensions-index';
+import './page/sw-extension-store-landing-page';

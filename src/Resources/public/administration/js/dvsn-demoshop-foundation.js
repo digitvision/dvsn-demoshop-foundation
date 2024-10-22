@@ -22,7 +22,13 @@
  * @category  digitvision
  * @package   Shopware\Plugins\DvsnDemoshopFoundation
  * @copyright (c) 2024 digitvision
- */let{Component:s}=Shopware;s.override("sw-settings-item",{template:"",computed:{classes(){return["sw.settings.usage.data.index","sw.first.run.wizard.index","sw.integration.index","sw.settings.mailer.index","sw.settings.store.index","sw.settings.shopware.updates.wizard"].includes(this.to.name)?{"is--disabled":!0}:{"is--disabled":this.disabled}}}});/**
+ */let{Component:s}=Shopware;s.override("sw-extension-store-landing-page",{template:"",methods:{activateStore(){}}});/**
+ * digitvision
+ *
+ * @category  digitvision
+ * @package   Shopware\Plugins\DvsnDemoshopFoundation
+ * @copyright (c) 2024 digitvision
+ */let{Component:o}=Shopware;o.override("sw-settings-item",{template:"",computed:{classes(){return["sw.settings.usage.data.index","sw.first.run.wizard.index","sw.integration.index","sw.settings.mailer.index","sw.settings.store.index","sw.settings.shopware.updates.wizard"].includes(this.to.name)?{"is--disabled":!0}:{"is--disabled":this.disabled}}}});/**
  * digitvision
  *
  * @category  digitvision

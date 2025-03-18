@@ -6,6 +6,18 @@
         <div class="cms-sections">
             <div class="cms-section pos-0 cms-section-default">
                 <div class="cms-section-default boxed">
+                    {% if context.languageInfo.localeCode == 'de-DE' %}
+                        {% sw_include '@Storefront/storefront/utilities/alert.html.twig' with {
+                            type: 'info',
+                            content: 'Wünschen Sie eine <strong>Kauf- oder Mietversion</strong> des Plugins ohne die Bindung an einen <strong>Shopware Account</strong>? Dann besuchen Sie doch gerne unseren digitvision Store!<br>Hier können Sie unsere Plugins auch außerhalb des Shopware Community Stores erwerben:<br /><a href="https://store.digitvision.de" target="_blank">https://store.digitvision.de</a>'
+                        } %}
+                    {% else %}
+                        {% sw_include '@Storefront/storefront/utilities/alert.html.twig' with {
+                            type: 'info',
+                            content: 'Would you like to purchase a <strong>buy or rental version</strong> of the plugin without being tied to a <strong>Shopware account</strong>? Then feel free to visit our digitvision store!<br>Here, you can purchase our plugins outside the Shopware Community Store as well:<br /><a href="https://store.digitvision.de" target="_blank">https://store.digitvision.de</a>'
+                        } %}
+                    {% endif %}
+
                     {% for element in page.elements %}
                         {% if element.type == 'alert' %}
                             {% sw_include '@Storefront/storefront/utilities/alert.html.twig' with {

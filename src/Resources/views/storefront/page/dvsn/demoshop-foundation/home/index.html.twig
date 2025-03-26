@@ -6,6 +6,7 @@
         <div class="cms-sections">
             <div class="cms-section pos-0 cms-section-default">
                 <div class="cms-section-default boxed">
+                    {#
                     {% if context.languageInfo.localeCode == 'de-DE' %}
                         {% sw_include '@Storefront/storefront/utilities/alert.html.twig' with {
                             type: 'info',
@@ -17,6 +18,7 @@
                             content: 'Would you like to purchase a <strong>buy or rental version</strong> of the plugin without being tied to a <strong>Shopware account</strong>? Then feel free to visit our digitvision store!<br>Here, you can purchase our plugins outside the Shopware Community Store as well:<br /><a href="https://store.digitvision.de" target="_blank">https://store.digitvision.de</a>'
                         } %}
                     {% endif %}
+                    #}
 
                     {% for element in page.elements %}
                         {% if element.type == 'alert' %}

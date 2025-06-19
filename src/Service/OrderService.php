@@ -27,10 +27,7 @@ use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
-use Shopware\Core\Framework\Uuid\Uuid;
 use Shopware\Core\Framework\Validation\DataBag\RequestDataBag;
-use Shopware\Core\System\SalesChannel\Context\AbstractSalesChannelContextFactory;
-use Shopware\Core\System\SalesChannel\Context\SalesChannelContextService;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
 use Shopware\Core\System\SalesChannel\SalesChannelEntity;
 
@@ -39,7 +36,6 @@ class OrderService
     public function __construct(
         private readonly CartService $cartService,
         private readonly AbstractCartOrderRoute $cartOrderRoute,
-        private readonly AbstractSalesChannelContextFactory $salesChannelContextFactory,
         private readonly EntityRepository $customerRepository,
         private readonly EntityRepository $salesChannelRepository,
         private readonly BaseService $baseService,

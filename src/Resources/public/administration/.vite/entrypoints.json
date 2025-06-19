@@ -1,0 +1,25 @@
+{
+  "base": "/bundles/dvsndemoshopfoundation/administration/",
+  "entryPoints": {
+    "dvsn-demoshop-foundation": {
+      "css": [
+        "/bundles/dvsndemoshopfoundation/administration/assets/dvsn-demoshop-foundation-DKSdEn2K.css"
+      ],
+      "dynamic": [],
+      "js": [
+        "/bundles/dvsndemoshopfoundation/administration/assets/dvsn-demoshop-foundation-DHUo11Tg.js"
+      ],
+      "legacy": false,
+      "preload": []
+    }
+  },
+  "legacy": false,
+  "metadatas": {},
+  "version": [
+    "7.1.0",
+    7,
+    1,
+    0
+  ],
+  "viteServer": null
+}

@@ -6,8 +6,6 @@
  * @copyright (c) 2024 digitvision
  */
 
-.sw-page.sw-dashboard-index {
-    .sw-usage-data-consent-banner {
-        display: none;
-    }
+.sw-dashboard-index .sw-usage-data-consent-banner {
+    display: none;
 }

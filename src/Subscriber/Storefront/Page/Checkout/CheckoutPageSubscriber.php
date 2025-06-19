@@ -33,13 +33,11 @@ class CheckoutPageSubscriber implements EventSubscriberInterface
 
     public function onPageLoaded(PageLoadedEvent $event): void
     {
-
         $request = $event->getRequest();
 
         if (!$request->hasSession(true)) {
             return;
         }
-
 
         $session = $request->getSession();
 
@@ -47,7 +45,5 @@ class CheckoutPageSubscriber implements EventSubscriberInterface
             'danger',
             $this->translator->trans('dvsn-demoshop-foundation.home.demoshop-alert', [])
         );
-
-
     }
 }

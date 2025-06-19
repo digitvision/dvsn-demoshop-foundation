@@ -17,7 +17,6 @@
         <service id="Dvsn\DemoshopFoundation\Service\OrderService" public="true">
             <argument type="service" id="Shopware\Core\Checkout\Cart\SalesChannel\CartService"/>
             <argument type="service" id="Shopware\Core\Checkout\Cart\SalesChannel\CartOrderRoute"/>
-            <argument type="service" id="Shopware\Core\System\SalesChannel\Context\SalesChannelContextFactory" />
             <argument type="service" id="customer.repository"/>
             <argument type="service" id="sales_channel.repository"/>
             <argument type="service" id="Dvsn\DemoshopFoundation\Service\BaseService"/>

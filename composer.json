@@ -1,7 +1,7 @@
 {
     "name": "dvsn/demoshop-foundation",
     "description": "Demoshop Foundation",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "license": "proprietary",
     "type": "shopware-platform-plugin",
     "authors": [

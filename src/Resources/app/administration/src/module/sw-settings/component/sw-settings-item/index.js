@@ -21,7 +21,8 @@ Component.override('sw-settings-item', {
                 'sw.integration.index',
                 'sw.settings.mailer.index',
                 'sw.settings.store.index',
-                'sw.settings.shopware.updates.wizard'
+                'sw.settings.shopware.updates.wizard',
+                'sw.settings.services.index'
             ];
 
             if (disabled.includes(this.to.name)) {
